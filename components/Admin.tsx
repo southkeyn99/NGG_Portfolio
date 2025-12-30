@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Film } from '../types';
-import { Save, Upload, Plus, Trash2, Lock, Unlock, X, Edit3, Image as ImageIcon, Award as AwardIcon, AlertCircle, Camera, Users, Clapperboard, Monitor, Loader2, CheckCircle2 } from 'lucide-react';
+import { Save, Upload, Plus, Trash2, Lock, Unlock, X, Edit3, Image as ImageIcon, Award as AwardIcon, AlertCircle, Camera, Users, Clapperboard, Monitor, Loader2, CheckCircle2, Database } from 'lucide-react';
 
 interface AdminProps {
   films: Film[];
@@ -28,19 +28,6 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
     }
   };
 
-  // Toast notification for auto-save
-  useEffect(() => {
-    const handleStorageChange = () => {
-      setShowSaveToast(true);
-      const timer = setTimeout(() => setShowSaveToast(false), 2000);
-      return () => clearTimeout(timer);
-    };
-    
-    // We listen to our own state changes implicitly via setFilms/setDirectorInfo
-    // But since App.tsx handles the actual localStorage.setItem, we can't easily listen to 'storage' event on same tab.
-    // Instead, we'll trigger this manually when updates happen.
-  }, []);
-
   const triggerSaveToast = () => {
     setShowSaveToast(true);
     setTimeout(() => setShowSaveToast(false), 2000);
@@ -60,6 +47,7 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
     });
   }, [films, activeCategory]);
 
+  // Robust image processing for database storage
   const processImage = (file: File, targetId: string, callback: (base64: string) => void) => {
     setProcessingId(targetId);
     const reader = new FileReader();
@@ -69,7 +57,8 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
         const canvas = document.createElement('canvas');
         let width = img.width;
         let height = img.height;
-        const MAX_DIM = 1200; 
+        // Moderate size for DB performance while maintaining quality
+        const MAX_DIM = 1600; 
 
         if (width > height) {
           if (width > MAX_DIM) {
@@ -90,22 +79,23 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
           setProcessingId(null);
           return;
         }
+        
+        // High-quality interpolation
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(img, 0, 0, width, height);
         
-        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.65); // Slightly more compression for safety
+        // Use 0.8 quality for good balance between size and detail
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
         callback(compressedBase64);
         setProcessingId(null);
         triggerSaveToast();
       };
       img.onerror = () => {
         setProcessingId(null);
-        alert("이미지 로드에 실패했습니다.");
+        alert("이미지 처리 중 오류가 발생했습니다.");
       };
       img.src = e.target?.result as string;
-    };
-    reader.onerror = () => {
-      setProcessingId(null);
-      alert("파일 읽기에 실패했습니다.");
     };
     reader.readAsDataURL(file);
   };
@@ -156,7 +146,7 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
     const file = e.dataTransfer.files?.[0];
     if (!file) return;
     processImage(file, 'hero', (base64) => {
-      setDirectorInfo(prev => ({ ...prev, heroImageUrl: base64 }));
+      setDirectorInfo((prev: any) => ({ ...prev, heroImageUrl: base64 }));
     });
   };
 
@@ -168,12 +158,12 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
   const addNewFilm = () => {
     const newFilm: Film = {
       id: `f_${Date.now()}`,
-      title: "새로운 프로젝트",
+      title: "New Project",
       year: new Date().getFullYear().toString(),
       role: activeCategory === 'directing' ? 'Director' : activeCategory === 'cinematography' ? 'Cinematographer' : 'Staff',
       runtime: "0min",
       genre: "Drama",
-      synopsis: "여기에 시놉시스를 입력하세요.",
+      synopsis: "Enter synopsis here.",
       posterUrl: "https://placehold.co/400x600/111/444/png?text=Poster",
       stillUrls: [],
       awards: []
@@ -184,7 +174,7 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
   };
 
   const deleteFilm = (filmId: string, title: string) => {
-    if (window.confirm(`'${title}' 작품을 정말로 삭제하시겠습니까?`)) {
+    if (window.confirm(`'${title}' 프로젝트를 영구적으로 삭제하시겠습니까?`)) {
       setFilms(prev => prev.filter(f => f.id !== filmId));
       setEditingFilmId(null);
       triggerSaveToast();
@@ -194,7 +184,7 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
   const addStill = (filmId: string) => {
     setFilms(prev => prev.map(f => {
       if (f.id === filmId) {
-        return { ...f, stillUrls: [...f.stillUrls, 'https://placehold.co/800x450/111/444/png?text=New+Still'] };
+        return { ...f, stillUrls: [...f.stillUrls, 'https://placehold.co/800x450/111/444/png?text=Empty+Still'] };
       }
       return f;
     }));
@@ -222,16 +212,8 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
             </div>
           </div>
           <h2 className="text-2xl font-serif text-white text-center mb-8 uppercase tracking-widest">Admin Access</h2>
-          <input 
-            type="password" 
-            placeholder="비밀번호 입력"
-            className="w-full bg-neutral-900 border border-neutral-800 text-white p-4 mb-4 focus:outline-none focus:border-cinematic-accent transition-all text-center tracking-[0.5em]"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <button type="submit" className="w-full bg-white text-black py-4 font-bold uppercase tracking-widest hover:bg-cinematic-accent hover:text-white transition-all">
-            Unlock
-          </button>
+          <input type="password" placeholder="비밀번호 입력" className="w-full bg-neutral-900 border border-neutral-800 text-white p-4 mb-4 focus:outline-none focus:border-cinematic-accent transition-all text-center tracking-[0.5em]" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <button type="submit" className="w-full bg-white text-black py-4 font-bold uppercase tracking-widest hover:bg-cinematic-accent hover:text-white transition-all">Unlock</button>
         </form>
       </div>
     );
@@ -247,109 +229,74 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
           <button onClick={() => setIsAuthenticated(false)} className="text-neutral-500 hover:text-white text-sm uppercase tracking-widest">Logout</button>
         </div>
 
-        {/* Hero & Profile Edit */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-20">
           <section className="lg:col-span-2 bg-cinematic-dark p-8 border border-neutral-800 rounded-lg">
-            <h3 className="text-xl font-serif text-white mb-8 border-b border-neutral-800 pb-2 uppercase flex items-center gap-2">
-              <Edit3 size={20} /> Director Profile
-            </h3>
+            <h3 className="text-xl font-serif text-white mb-8 border-b border-neutral-800 pb-2 uppercase flex items-center gap-2"><Edit3 size={20} /> Profile</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-xs uppercase text-neutral-500 mb-2">Name</label>
-                <input value={directorInfo.name} onChange={(e) => { setDirectorInfo(prev => ({...prev, name: e.target.value})); triggerSaveToast(); }} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" />
+                <input value={directorInfo.name} onChange={(e) => { setDirectorInfo((prev: any) => ({...prev, name: e.target.value})); triggerSaveToast(); }} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" />
               </div>
               <div>
                 <label className="block text-xs uppercase text-neutral-500 mb-2">Korean Name</label>
-                <input value={directorInfo.koreanName} onChange={(e) => { setDirectorInfo(prev => ({...prev, koreanName: e.target.value})); triggerSaveToast(); }} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" />
+                <input value={directorInfo.koreanName} onChange={(e) => { setDirectorInfo((prev: any) => ({...prev, koreanName: e.target.value})); triggerSaveToast(); }} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" />
               </div>
               <div className="md:col-span-2">
                 <label className="block text-xs uppercase text-neutral-500 mb-2">Tagline</label>
-                <input value={directorInfo.tagline} onChange={(e) => { setDirectorInfo(prev => ({...prev, tagline: e.target.value})); triggerSaveToast(); }} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" />
+                <input value={directorInfo.tagline} onChange={(e) => { setDirectorInfo((prev: any) => ({...prev, tagline: e.target.value})); triggerSaveToast(); }} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" />
               </div>
               <div className="md:col-span-2">
                 <label className="block text-xs uppercase text-neutral-500 mb-2">Bio</label>
-                <textarea value={directorInfo.bio} onChange={(e) => { setDirectorInfo(prev => ({...prev, bio: e.target.value})); triggerSaveToast(); }} rows={4} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" />
+                <textarea value={directorInfo.bio} onChange={(e) => { setDirectorInfo((prev: any) => ({...prev, bio: e.target.value})); triggerSaveToast(); }} rows={4} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" />
               </div>
             </div>
           </section>
 
           <section className="bg-cinematic-dark p-8 border border-neutral-800 rounded-lg">
-            <h3 className="text-xl font-serif text-white mb-8 border-b border-neutral-800 pb-2 uppercase flex items-center gap-2">
-              <Monitor size={20} /> Hero Settings
-            </h3>
+            <h3 className="text-xl font-serif text-white mb-8 border-b border-neutral-800 pb-2 uppercase flex items-center gap-2"><Monitor size={20} /> Hero</h3>
             <div className="space-y-4">
-              <label className="block text-xs uppercase text-neutral-500 mb-2 font-bold tracking-widest">Main Background Image</label>
-              <div 
-                className={`relative aspect-video bg-neutral-900 border-2 rounded overflow-hidden group transition-all ${dragActiveId === 'hero' ? 'border-cinematic-accent scale-[1.02]' : 'border-neutral-800 border-dashed'}`}
-                onDragEnter={(e) => handleDrag(e, 'hero')}
-                onDragOver={(e) => handleDrag(e, 'hero')}
-                onDragLeave={(e) => handleDrag(e, 'hero')}
-                onDrop={handleHeroDrop}
-              >
-                <img src={directorInfo.heroImageUrl} className="w-full h-full object-cover opacity-50" alt="Hero Bg" />
-                
-                {/* Processing Overlay */}
+              <div className={`relative aspect-video bg-neutral-900 border-2 rounded overflow-hidden group transition-all ${dragActiveId === 'hero' ? 'border-cinematic-accent scale-[1.02]' : 'border-neutral-800 border-dashed'}`} onDragEnter={(e) => handleDrag(e, 'hero')} onDragOver={(e) => handleDrag(e, 'hero')} onDragLeave={(e) => handleDrag(e, 'hero')} onDrop={handleHeroDrop}>
+                <img src={directorInfo.heroImageUrl} className="w-full h-full object-cover opacity-50" alt="" />
                 {processingId === 'hero' && (
                   <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center z-20">
                     <Loader2 className="text-cinematic-accent animate-spin mb-2" size={32} />
-                    <span className="text-[10px] uppercase font-bold text-white tracking-widest">Processing...</span>
+                    <span className="text-[10px] uppercase font-bold text-white tracking-widest">Saving to DB...</span>
                   </div>
                 )}
-
                 <label className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
                   <Upload size={32} className="text-white mb-2" />
-                  <span className="text-xs text-white uppercase font-bold px-4 text-center">드래그하거나 클릭하여 업로드</span>
+                  <span className="text-xs text-white uppercase font-bold px-4 text-center">드래그/클릭 업로드</span>
                   <input type="file" className="hidden" accept="image/*" onChange={(e) => {
                     const file = e.target.files?.[0];
-                    if (file) processImage(file, 'hero', (base64) => setDirectorInfo(prev => ({ ...prev, heroImageUrl: base64 })));
+                    if (file) processImage(file, 'hero', (base64) => setDirectorInfo((prev: any) => ({ ...prev, heroImageUrl: base64 })));
                   }} />
                 </label>
-                
-                {dragActiveId === 'hero' && (
-                  <div className="absolute inset-0 bg-cinematic-accent/20 flex items-center justify-center border-2 border-cinematic-accent animate-pulse">
-                    <span className="text-white font-bold uppercase tracking-widest text-sm">Drop to Upload</span>
-                  </div>
-                )}
               </div>
             </div>
           </section>
         </div>
 
-        {/* Works Management */}
         <section>
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-6">
             <div className="flex items-center gap-6">
-                <h3 className="text-xl font-serif text-white uppercase flex items-center gap-2">
-                  <ImageIcon size={20} /> Manage Works ({categorizedFilms.length})
-                </h3>
-                <button 
-                  onClick={addNewFilm}
-                  className="flex items-center gap-2 text-xs bg-white text-black hover:bg-cinematic-accent hover:text-white px-5 py-2.5 rounded font-bold uppercase tracking-widest transition-all shadow-xl"
-                >
-                  <Plus size={18} /> 새 프로젝트 추가
+                <h3 className="text-xl font-serif text-white uppercase flex items-center gap-2"><ImageIcon size={20} /> Works ({categorizedFilms.length})</h3>
+                <button onClick={addNewFilm} className="flex items-center gap-2 text-xs bg-white text-black hover:bg-cinematic-accent hover:text-white px-5 py-2.5 rounded font-bold uppercase tracking-widest transition-all shadow-xl">
+                  <Plus size={18} /> 새 프로젝트
                 </button>
             </div>
-            
             <div className="flex bg-neutral-900 p-1 rounded-lg border border-neutral-800 w-full md:w-auto">
-                <button onClick={() => setActiveCategory('directing')} className={`flex-1 md:flex-none px-6 py-2.5 text-xs font-bold uppercase tracking-widest rounded-md transition-all flex items-center justify-center gap-2 ${activeCategory === 'directing' ? 'bg-cinematic-accent text-white shadow-lg' : 'text-neutral-500 hover:text-white'}`}>
-                  <Clapperboard size={14} /> 디렉팅
-                </button>
-                <button onClick={() => setActiveCategory('cinematography')} className={`flex-1 md:flex-none px-6 py-2.5 text-xs font-bold uppercase tracking-widest rounded-md transition-all flex items-center justify-center gap-2 ${activeCategory === 'cinematography' ? 'bg-cinematic-accent text-white shadow-lg' : 'text-neutral-500 hover:text-white'}`}>
-                  <Camera size={14} /> 촬영
-                </button>
-                <button onClick={() => setActiveCategory('staff')} className={`flex-1 md:flex-none px-6 py-2.5 text-xs font-bold uppercase tracking-widest rounded-md transition-all flex items-center justify-center gap-2 ${activeCategory === 'staff' ? 'bg-cinematic-accent text-white shadow-lg' : 'text-neutral-500 hover:text-white'}`}>
-                  <Users size={14} /> 스탭
-                </button>
+                {['directing', 'cinematography', 'staff'].map((cat) => (
+                  <button key={cat} onClick={() => setActiveCategory(cat as any)} className={`flex-1 md:flex-none px-6 py-2.5 text-xs font-bold uppercase tracking-widest rounded-md transition-all ${activeCategory === cat ? 'bg-cinematic-accent text-white shadow-lg' : 'text-neutral-500 hover:text-white'}`}>
+                    {cat === 'directing' ? '디렉팅' : cat === 'cinematography' ? '촬영' : '스탭'}
+                  </button>
+                ))}
             </div>
           </div>
           
           <div className="space-y-6">
             {categorizedFilms.map(film => (
-              <div key={film.id} className="bg-cinematic-dark border border-neutral-800 rounded-lg overflow-hidden group">
-                <div 
-                  className={`p-6 flex items-center justify-between cursor-pointer transition-all ${editingFilmId === film.id ? 'bg-white/5' : 'hover:bg-white/5'}`}
-                  onClick={() => setEditingFilmId(editingFilmId === film.id ? null : film.id)}
-                >
+              <div key={film.id} className="bg-cinematic-dark border border-neutral-800 rounded-lg overflow-hidden">
+                <div className={`p-6 flex items-center justify-between cursor-pointer transition-all ${editingFilmId === film.id ? 'bg-white/5' : 'hover:bg-white/5'}`} onClick={() => setEditingFilmId(editingFilmId === film.id ? null : film.id)}>
                   <div className="flex items-center gap-4">
                     <img src={film.posterUrl} className="w-12 h-16 object-cover rounded border border-neutral-700" alt="" />
                     <div>
@@ -358,130 +305,70 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
                     </div>
                   </div>
                   <div className="flex items-center gap-6">
-                    <button onClick={(e) => { e.stopPropagation(); deleteFilm(film.id, film.title); }} className="text-neutral-600 hover:text-red-500 transition-colors p-2 lg:opacity-0 lg:group-hover:opacity-100"><Trash2 size={18} /></button>
+                    <button onClick={(e) => { e.stopPropagation(); deleteFilm(film.id, film.title); }} className="text-neutral-600 hover:text-red-500 p-2"><Trash2 size={18} /></button>
                     <div className="text-neutral-500">{editingFilmId === film.id ? <X size={20} /> : <Edit3 size={20} />}</div>
                   </div>
                 </div>
 
                 {editingFilmId === film.id && (
-                  <div className="p-8 border-t border-neutral-800 animate-fade-in space-y-8">
+                  <div className="p-8 border-t border-neutral-800 space-y-8 animate-fade-in">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                       <div className="md:col-span-1">
-                        <label className="block text-xs uppercase text-neutral-500 mb-2 font-bold tracking-widest">Poster Image</label>
-                        <div 
-                          className={`relative aspect-[2/3] bg-neutral-900 border-2 rounded overflow-hidden group transition-all ${dragActiveId === `poster-${film.id}` ? 'border-cinematic-accent scale-[1.02]' : 'border-neutral-800 border-dashed'}`}
-                          onDragEnter={(e) => handleDrag(e, `poster-${film.id}`)}
-                          onDragOver={(e) => handleDrag(e, `poster-${film.id}`)}
-                          onDragLeave={(e) => handleDrag(e, `poster-${film.id}`)}
-                          onDrop={(e) => handleDrop(e, film.id, 'poster')}
-                        >
+                        <div className={`relative aspect-[2/3] bg-neutral-900 border-2 rounded overflow-hidden group transition-all ${dragActiveId === `poster-${film.id}` ? 'border-cinematic-accent' : 'border-neutral-800 border-dashed'}`} onDragEnter={(e) => handleDrag(e, `poster-${film.id}`)} onDragOver={(e) => handleDrag(e, `poster-${film.id}`)} onDragLeave={(e) => handleDrag(e, `poster-${film.id}`)} onDrop={(e) => handleDrop(e, film.id, 'poster')}>
                            <img src={film.posterUrl} className="w-full h-full object-cover" alt="" />
-                           
-                           {/* Processing Overlay */}
                            {processingId === `poster-${film.id}` && (
                              <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center z-20">
                                <Loader2 className="text-cinematic-accent animate-spin mb-2" size={32} />
-                               <span className="text-[10px] uppercase font-bold text-white tracking-widest">Processing...</span>
+                               <span className="text-[10px] uppercase font-bold text-white tracking-widest">Saving...</span>
                              </div>
                            )}
-
                            <label className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                               <Upload size={24} className="mb-2" />
-                              <span className="text-xs text-center px-4 uppercase font-bold">이미지 드롭 또는 클릭</span>
+                              <span className="text-xs uppercase font-bold">포스터 변경</span>
                               <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, film.id, 'poster')} />
                            </label>
                         </div>
                       </div>
-                      <div className="md:col-span-2 space-y-5">
-                        <div>
-                          <label className="block text-xs uppercase text-neutral-500 mb-2 font-bold tracking-widest">Title</label>
-                          <input value={film.title} onChange={(e) => updateFilmText(film.id, 'title', e.target.value)} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" />
-                        </div>
+                      <div className="md:col-span-2 space-y-4">
+                        <input value={film.title} onChange={(e) => updateFilmText(film.id, 'title', e.target.value)} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" placeholder="Title" />
                         <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-xs uppercase text-neutral-500 mb-2 font-bold tracking-widest">Year</label>
-                            <input value={film.year} onChange={(e) => updateFilmText(film.id, 'year', e.target.value)} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" />
-                          </div>
-                          <div>
-                            <label className="block text-xs uppercase text-neutral-500 mb-2 font-bold tracking-widest">Runtime</label>
-                            <input value={film.runtime} onChange={(e) => updateFilmText(film.id, 'runtime', e.target.value)} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" />
-                          </div>
+                          <input value={film.year} onChange={(e) => updateFilmText(film.id, 'year', e.target.value)} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" placeholder="Year" />
+                          <input value={film.runtime} onChange={(e) => updateFilmText(film.id, 'runtime', e.target.value)} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" placeholder="Runtime" />
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-xs uppercase text-neutral-500 mb-2 font-bold tracking-widest">Genre</label>
-                            <input value={film.genre} onChange={(e) => updateFilmText(film.id, 'genre', e.target.value)} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" />
-                          </div>
-                          <div className="flex items-center gap-3">
-                             <div className="flex-1">
-                                <label className="block text-xs uppercase text-neutral-500 mb-2 font-bold tracking-widest">Role (Category Filter)</label>
-                                <input value={film.role} onChange={(e) => updateFilmText(film.id, 'role', e.target.value)} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" />
-                             </div>
-                             <div>
-                                <label className="block text-xs uppercase text-neutral-500 mb-2 font-bold tracking-widest">AI Film</label>
-                                <button onClick={() => updateFilmText(film.id, 'isAi', !film.isAi)} className={`p-3 rounded border transition-all ${film.isAi ? 'bg-cinematic-accent border-cinematic-accent text-white' : 'bg-neutral-900 border-neutral-800 text-neutral-600'}`}>AI</button>
-                             </div>
-                          </div>
-                        </div>
-                        <div>
-                          <label className="block text-xs uppercase text-neutral-500 mb-2 font-bold tracking-widest">Synopsis</label>
-                          <textarea value={film.synopsis} onChange={(e) => updateFilmText(film.id, 'synopsis', e.target.value)} rows={4} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" />
-                        </div>
+                        <textarea value={film.synopsis} onChange={(e) => updateFilmText(film.id, 'synopsis', e.target.value)} rows={4} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" placeholder="Synopsis" />
                       </div>
                     </div>
 
-                    {/* Stills Gallery */}
                     <div className="border-t border-neutral-800 pt-8">
                        <div className="flex justify-between items-center mb-6">
                           <h5 className="text-sm font-bold uppercase tracking-widest text-white">Stills Archive</h5>
                           <button onClick={() => addStill(film.id)} className="flex items-center gap-2 text-xs bg-white/10 hover:bg-white/20 px-4 py-2 rounded transition-all font-bold tracking-widest uppercase">
-                             <Plus size={16} /> Add Still
+                             <Plus size={16} /> Add Slot
                           </button>
                        </div>
                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                           {film.stillUrls.map((url, i) => {
                             const stillTargetId = `still-${film.id}-${i}`;
                             return (
-                              <div 
-                                key={i} 
-                                className={`relative aspect-video rounded border-2 transition-all overflow-hidden group ${dragActiveId === stillTargetId ? 'border-cinematic-accent scale-[1.05] z-10 shadow-xl' : 'border-neutral-800'}`}
-                                onDragEnter={(e) => handleDrag(e, stillTargetId)}
-                                onDragOver={(e) => handleDrag(e, stillTargetId)}
-                                onDragLeave={(e) => handleDrag(e, stillTargetId)}
-                                onDrop={(e) => handleDrop(e, film.id, 'still', i)}
-                              >
+                              <div key={i} className={`relative aspect-video rounded border-2 transition-all overflow-hidden group ${dragActiveId === stillTargetId ? 'border-cinematic-accent' : 'border-neutral-800'}`} onDragEnter={(e) => handleDrag(e, stillTargetId)} onDragOver={(e) => handleDrag(e, stillTargetId)} onDragLeave={(e) => handleDrag(e, stillTargetId)} onDrop={(e) => handleDrop(e, film.id, 'still', i)}>
                                  <img src={url} className="w-full h-full object-cover" alt="" />
-                                 
-                                 {/* Processing Overlay */}
                                  {processingId === stillTargetId && (
                                    <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center z-20">
                                       <Loader2 className="text-cinematic-accent animate-spin mb-1" size={24} />
-                                      <span className="text-[8px] uppercase font-bold text-white tracking-widest">Processing...</span>
+                                      <span className="text-[8px] uppercase font-bold text-white">Storing...</span>
                                    </div>
                                  )}
-
                                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                     <label className="p-2 hover:text-cinematic-accent cursor-pointer">
                                        <Upload size={20} />
                                        <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, film.id, 'still', i)} />
                                     </label>
-                                    <button onClick={() => removeStill(film.id, i)} className="p-2 hover:text-red-500">
-                                       <Trash2 size={20} />
-                                    </button>
+                                    <button onClick={() => removeStill(film.id, i)} className="p-2 hover:text-red-500"><Trash2 size={20} /></button>
                                  </div>
-                                 {dragActiveId === stillTargetId && (
-                                   <div className="absolute inset-0 bg-cinematic-accent/30 flex items-center justify-center pointer-events-none">
-                                      <span className="text-white text-[10px] font-bold uppercase">Drop</span>
-                                   </div>
-                                 )}
                               </div>
                             );
                           })}
                        </div>
-                    </div>
-
-                    <div className="flex justify-end pt-4 border-t border-neutral-800">
-                       <p className="text-[10px] text-neutral-500 italic font-light tracking-wide uppercase">All changes are now automatically persisted to your browser storage.</p>
                     </div>
                   </div>
                 )}
@@ -489,13 +376,16 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
             ))}
           </div>
         </section>
+        <div className="mt-20 border-t border-neutral-900 pt-8 flex items-center justify-center gap-2 text-neutral-600">
+           <Database size={14} />
+           <p className="text-[10px] uppercase font-bold tracking-widest">Permanent Storage Active (IndexedDB)</p>
+        </div>
       </div>
 
-      {/* Global Save Toast */}
       {showSaveToast && (
         <div className="fixed bottom-10 right-10 bg-cinematic-accent text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 animate-fade-in-up z-[300]">
            <CheckCircle2 size={18} />
-           <span className="text-xs font-bold uppercase tracking-widest">Changes Saved</span>
+           <span className="text-xs font-bold uppercase tracking-widest">Permanent DB Synced</span>
         </div>
       )}
     </div>
