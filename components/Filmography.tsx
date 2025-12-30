@@ -108,9 +108,20 @@ const Filmography: React.FC<FilmographyProps> = ({ title, category, films }) => 
 
                 <div className="w-full md:w-7/12 lg:w-8/12 flex flex-col justify-center items-start">
                   <span className="text-cinematic-accent text-lg font-bold tracking-widest mb-4 block">{film.year}</span>
-                  <h3 className="font-serif text-white mb-6 leading-tight group-hover:text-neutral-200 transition-colors tracking-tight">
+                  <h3 className="font-serif text-white mb-4 leading-tight group-hover:text-neutral-200 transition-colors tracking-tight">
                     {renderTitle(film.title, "text-4xl md:text-6xl", "text-xl md:text-3xl")}
                   </h3>
+
+                  {/* Awards Badge on List Preview */}
+                  {film.awards && film.awards.length > 0 && (
+                    <div className="mb-6 flex items-center gap-2 px-3 py-1 bg-cinematic-accent/10 border border-cinematic-accent/20 rounded">
+                      <Award size={14} className="text-cinematic-accent" />
+                      <span className="text-cinematic-accent text-[10px] font-bold uppercase tracking-widest truncate max-w-md">
+                        {film.awards[0]} {film.awards.length > 1 && `외 ${film.awards.length - 1}개 수상`}
+                      </span>
+                    </div>
+                  )}
+
                   <div className="text-cinematic-accent text-sm font-bold tracking-[0.1em] mb-8 flex flex-wrap gap-4 items-center uppercase">
                     <span>{film.genre}</span>
                     <span className="opacity-30">|</span>

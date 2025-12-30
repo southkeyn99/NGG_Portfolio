@@ -11,7 +11,7 @@ import Contact from './components/Contact';
 import Admin from './components/Admin';
 import { FILMS as INITIAL_FILMS, DIRECTOR_INFO as INITIAL_INFO } from './constants';
 import { Film } from './types';
-import { ArrowRight, Loader2 } from 'lucide-react';
+import { ArrowRight, Loader2, Award } from 'lucide-react';
 
 // --- Robust IndexedDB Storage Implementation ---
 const DB_NAME = 'DirectorPortfolioDB';
@@ -107,14 +107,30 @@ const Home: React.FC<{ films: Film[], directorInfo: any }> = ({ films, directorI
                </Link>
                <div className="w-full lg:w-2/5 text-left">
                   <span className="text-cinematic-accent font-bold text-lg mb-2 block tracking-tighter">{recentFilm.year}</span>
-                  <h3 className="font-serif text-white mb-8 tracking-tight leading-tight">
+                  <h3 className="font-serif text-white mb-6 tracking-tight leading-tight">
                     {renderTitle(recentFilm.title, "text-4xl md:text-6xl", "text-xl md:text-3xl")}
                   </h3>
+                  
+                  {/* Awards Preview on Home */}
+                  {recentFilm.awards && recentFilm.awards.length > 0 && (
+                    <div className="flex items-center gap-2 mb-6 text-cinematic-accent animate-pulse">
+                      <Award size={16} />
+                      <span className="text-[10px] uppercase font-bold tracking-widest truncate max-w-xs">{recentFilm.awards[0]} {recentFilm.awards.length > 1 && `외 ${recentFilm.awards.length - 1}개 수상`}</span>
+                    </div>
+                  )}
+
                   <p className="text-neutral-500 text-base md:text-lg mb-10 max-w-lg leading-relaxed whitespace-pre-line font-light">{recentFilm.synopsis}</p>
+                  
                   <div className="text-cinematic-accent text-[11px] md:text-xs font-bold tracking-[0.2em] mb-12 flex flex-wrap gap-4 items-center uppercase">
                     <span>{recentFilm.genre}</span>
                     <span className="opacity-30 font-light">|</span>
                     <span>{recentFilm.runtime}</span>
+                    {recentFilm.aspectRatio && (
+                      <>
+                        <span className="opacity-30 font-light">|</span>
+                        <span>{recentFilm.aspectRatio}</span>
+                      </>
+                    )}
                   </div>
                   <Link to="/film" className="inline-flex items-center gap-3 text-white border-b border-cinematic-accent/50 pb-2 hover:border-cinematic-accent hover:text-cinematic-accent transition-all duration-300 tracking-[0.2em] text-xs font-bold uppercase">
                     View Project <ArrowRight size={16} />
@@ -132,15 +148,16 @@ function App() {
   const [films, setFilms] = useState<Film[]>(INITIAL_FILMS);
   const [directorInfo, setDirectorInfo] = useState<any>(INITIAL_INFO);
   const [isAppReady, setIsAppReady] = useState(false);
-  const isFirstRender = useRef(true);
 
   // 1. Initial Load from IndexedDB
   useEffect(() => {
     const initData = async () => {
-      const savedFilms = await loadFromDB('films', INITIAL_FILMS);
-      const savedInfo = await loadFromDB('directorInfo', INITIAL_INFO);
-      setFilms(savedFilms as Film[]);
-      setDirectorInfo(savedInfo);
+      const savedFilms = await loadFromDB('films', null);
+      const savedInfo = await loadFromDB('directorInfo', null);
+      
+      if (savedFilms) setFilms(savedFilms as Film[]);
+      if (savedInfo) setDirectorInfo(savedInfo);
+      
       setIsAppReady(true);
     };
     initData();

@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Film } from '../types';
-import { Save, Upload, Plus, Trash2, Lock, Unlock, X, Edit3, Image as ImageIcon, Award as AwardIcon, AlertCircle, Camera, Users, Clapperboard, Monitor, Loader2, CheckCircle2, Database } from 'lucide-react';
+import { Save, Upload, Plus, Trash2, Lock, Unlock, X, Edit3, Image as ImageIcon, Award as AwardIcon, AlertCircle, Camera, Users, Clapperboard, Monitor, Loader2, CheckCircle2, Database, Trash } from 'lucide-react';
 
 interface AdminProps {
   films: Film[];
@@ -47,7 +47,6 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
     });
   }, [films, activeCategory]);
 
-  // Robust image processing for database storage
   const processImage = (file: File, targetId: string, callback: (base64: string) => void) => {
     setProcessingId(targetId);
     const reader = new FileReader();
@@ -57,7 +56,6 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
         const canvas = document.createElement('canvas');
         let width = img.width;
         let height = img.height;
-        // Moderate size for DB performance while maintaining quality
         const MAX_DIM = 1600; 
 
         if (width > height) {
@@ -80,12 +78,10 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
           return;
         }
         
-        // High-quality interpolation
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(img, 0, 0, width, height);
         
-        // Use 0.8 quality for good balance between size and detail
         const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
         callback(compressedBase64);
         setProcessingId(null);
@@ -155,6 +151,38 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
     triggerSaveToast();
   };
 
+  const handleAwardUpdate = (filmId: string, awardIndex: number, newValue: string) => {
+    setFilms(prev => prev.map(f => {
+      if (f.id === filmId && f.awards) {
+        const newAwards = [...f.awards];
+        newAwards[awardIndex] = newValue;
+        return { ...f, awards: newAwards };
+      }
+      return f;
+    }));
+    triggerSaveToast();
+  };
+
+  const addAward = (filmId: string) => {
+    setFilms(prev => prev.map(f => {
+      if (f.id === filmId) {
+        return { ...f, awards: [...(f.awards || []), "새로운 수상 내역"] };
+      }
+      return f;
+    }));
+    triggerSaveToast();
+  };
+
+  const removeAward = (filmId: string, awardIndex: number) => {
+    setFilms(prev => prev.map(f => {
+      if (f.id === filmId && f.awards) {
+        return { ...f, awards: f.awards.filter((_, i) => i !== awardIndex) };
+      }
+      return f;
+    }));
+    triggerSaveToast();
+  };
+
   const addNewFilm = () => {
     const newFilm: Film = {
       id: `f_${Date.now()}`,
@@ -166,7 +194,8 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
       synopsis: "Enter synopsis here.",
       posterUrl: "https://placehold.co/400x600/111/444/png?text=Poster",
       stillUrls: [],
-      awards: []
+      awards: [],
+      aspectRatio: "16:9"
     };
     setFilms(prev => [newFilm, ...prev]);
     setEditingFilmId(newFilm.id);
@@ -330,15 +359,67 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
                         </div>
                       </div>
                       <div className="md:col-span-2 space-y-4">
-                        <input value={film.title} onChange={(e) => updateFilmText(film.id, 'title', e.target.value)} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" placeholder="Title" />
-                        <div className="grid grid-cols-2 gap-4">
-                          <input value={film.year} onChange={(e) => updateFilmText(film.id, 'year', e.target.value)} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" placeholder="Year" />
-                          <input value={film.runtime} onChange={(e) => updateFilmText(film.id, 'runtime', e.target.value)} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" placeholder="Runtime" />
+                        <div>
+                          <label className="block text-[10px] uppercase text-neutral-500 mb-1 tracking-widest">Title</label>
+                          <input value={film.title} onChange={(e) => updateFilmText(film.id, 'title', e.target.value)} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" placeholder="Title" />
                         </div>
-                        <textarea value={film.synopsis} onChange={(e) => updateFilmText(film.id, 'synopsis', e.target.value)} rows={4} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" placeholder="Synopsis" />
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-[10px] uppercase text-neutral-500 mb-1 tracking-widest">Year</label>
+                            <input value={film.year} onChange={(e) => updateFilmText(film.id, 'year', e.target.value)} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" placeholder="Year" />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] uppercase text-neutral-500 mb-1 tracking-widest">Runtime</label>
+                            <input value={film.runtime} onChange={(e) => updateFilmText(film.id, 'runtime', e.target.value)} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" placeholder="Runtime" />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-[10px] uppercase text-neutral-500 mb-1 tracking-widest">Genre</label>
+                            <input value={film.genre} onChange={(e) => updateFilmText(film.id, 'genre', e.target.value)} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" placeholder="Genre" />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] uppercase text-neutral-500 mb-1 tracking-widest">Aspect Ratio</label>
+                            <input value={film.aspectRatio || ""} onChange={(e) => updateFilmText(film.id, 'aspectRatio', e.target.value)} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" placeholder="e.g., 2.35:1" />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] uppercase text-neutral-500 mb-1 tracking-widest">Synopsis</label>
+                          <textarea value={film.synopsis} onChange={(e) => updateFilmText(film.id, 'synopsis', e.target.value)} rows={4} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" placeholder="Synopsis" />
+                        </div>
                       </div>
                     </div>
 
+                    {/* Awards Editor */}
+                    <div className="border-t border-neutral-800 pt-8">
+                       <div className="flex justify-between items-center mb-6">
+                          <h5 className="text-sm font-bold uppercase tracking-widest text-white flex items-center gap-2">
+                             <AwardIcon size={18} className="text-cinematic-accent" /> Awards & Festivals
+                          </h5>
+                          <button onClick={() => addAward(film.id)} className="flex items-center gap-2 text-xs bg-white/10 hover:bg-white/20 px-4 py-2 rounded transition-all font-bold tracking-widest uppercase">
+                             <Plus size={16} /> Add Award
+                          </button>
+                       </div>
+                       <div className="space-y-3">
+                          {film.awards?.map((award, i) => (
+                            <div key={i} className="flex gap-3">
+                               <input 
+                                 value={award} 
+                                 onChange={(e) => handleAwardUpdate(film.id, i, e.target.value)}
+                                 className="flex-1 bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none text-sm"
+                               />
+                               <button onClick={() => removeAward(film.id, i)} className="p-3 bg-neutral-900 border border-neutral-800 text-neutral-600 hover:text-red-500 transition-colors">
+                                  <Trash size={18} />
+                               </button>
+                            </div>
+                          ))}
+                          {(!film.awards || film.awards.length === 0) && (
+                            <p className="text-neutral-600 text-xs italic">No awards listed.</p>
+                          )}
+                       </div>
+                    </div>
+
+                    {/* Stills Gallery */}
                     <div className="border-t border-neutral-800 pt-8">
                        <div className="flex justify-between items-center mb-6">
                           <h5 className="text-sm font-bold uppercase tracking-widest text-white">Stills Archive</h5>
