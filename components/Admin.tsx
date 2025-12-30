@@ -1,7 +1,7 @@
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Film } from '../types';
-import { Save, Upload, Plus, Trash2, Lock, Unlock, X, Edit3, Image as ImageIcon, Award as AwardIcon, AlertCircle, Camera, Users, Clapperboard, Monitor } from 'lucide-react';
+import { Save, Upload, Plus, Trash2, Lock, Unlock, X, Edit3, Image as ImageIcon, Award as AwardIcon, AlertCircle, Camera, Users, Clapperboard, Monitor, Loader2, CheckCircle2 } from 'lucide-react';
 
 interface AdminProps {
   films: Film[];
@@ -16,6 +16,8 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
   const [editingFilmId, setEditingFilmId] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<'directing' | 'cinematography' | 'staff'>('directing');
   const [dragActiveId, setDragActiveId] = useState<string | null>(null);
+  const [processingId, setProcessingId] = useState<string | null>(null);
+  const [showSaveToast, setShowSaveToast] = useState(false);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,6 +26,24 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
     } else {
       alert('비밀번호가 틀렸습니다.');
     }
+  };
+
+  // Toast notification for auto-save
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setShowSaveToast(true);
+      const timer = setTimeout(() => setShowSaveToast(false), 2000);
+      return () => clearTimeout(timer);
+    };
+    
+    // We listen to our own state changes implicitly via setFilms/setDirectorInfo
+    // But since App.tsx handles the actual localStorage.setItem, we can't easily listen to 'storage' event on same tab.
+    // Instead, we'll trigger this manually when updates happen.
+  }, []);
+
+  const triggerSaveToast = () => {
+    setShowSaveToast(true);
+    setTimeout(() => setShowSaveToast(false), 2000);
   };
 
   const categorizedFilms = useMemo(() => {
@@ -40,8 +60,8 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
     });
   }, [films, activeCategory]);
 
-  // Comprehensive image processing: resizing and compressing to stay within LocalStorage limits
-  const processImage = (file: File, callback: (base64: string) => void) => {
+  const processImage = (file: File, targetId: string, callback: (base64: string) => void) => {
+    setProcessingId(targetId);
     const reader = new FileReader();
     reader.onload = (e) => {
       const img = new Image();
@@ -49,7 +69,7 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
         const canvas = document.createElement('canvas');
         let width = img.width;
         let height = img.height;
-        const MAX_DIM = 1200; // Limit resolution for local storage
+        const MAX_DIM = 1200; 
 
         if (width > height) {
           if (width > MAX_DIM) {
@@ -66,14 +86,26 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext('2d');
-        if (!ctx) return;
+        if (!ctx) {
+          setProcessingId(null);
+          return;
+        }
         ctx.drawImage(img, 0, 0, width, height);
         
-        // Export as JPEG with 0.7 quality to save space
-        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.65); // Slightly more compression for safety
         callback(compressedBase64);
+        setProcessingId(null);
+        triggerSaveToast();
+      };
+      img.onerror = () => {
+        setProcessingId(null);
+        alert("이미지 로드에 실패했습니다.");
       };
       img.src = e.target?.result as string;
+    };
+    reader.onerror = () => {
+      setProcessingId(null);
+      alert("파일 읽기에 실패했습니다.");
     };
     reader.readAsDataURL(file);
   };
@@ -81,7 +113,8 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, filmId: string, type: 'poster' | 'still', index?: number) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    processImage(file, (base64) => updateFilmImage(filmId, type, base64, index));
+    const targetId = `${type}-${filmId}${index !== undefined ? '-' + index : ''}`;
+    processImage(file, targetId, (base64) => updateFilmImage(filmId, type, base64, index));
   };
 
   const handleDrop = (e: React.DragEvent, filmId: string, type: 'poster' | 'still', index?: number) => {
@@ -89,7 +122,8 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
     setDragActiveId(null);
     const file = e.dataTransfer.files?.[0];
     if (!file) return;
-    processImage(file, (base64) => updateFilmImage(filmId, type, base64, index));
+    const targetId = `${type}-${filmId}${index !== undefined ? '-' + index : ''}`;
+    processImage(file, targetId, (base64) => updateFilmImage(filmId, type, base64, index));
   };
 
   const updateFilmImage = (filmId: string, type: 'poster' | 'still', base64: string, index?: number) => {
@@ -121,11 +155,14 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
     setDragActiveId(null);
     const file = e.dataTransfer.files?.[0];
     if (!file) return;
-    processImage(file, (base64) => setDirectorInfo(prev => ({ ...prev, heroImageUrl: base64 })));
+    processImage(file, 'hero', (base64) => {
+      setDirectorInfo(prev => ({ ...prev, heroImageUrl: base64 }));
+    });
   };
 
   const updateFilmText = (filmId: string, field: keyof Film, value: any) => {
     setFilms(prev => prev.map(f => f.id === filmId ? { ...f, [field]: value } : f));
+    triggerSaveToast();
   };
 
   const addNewFilm = () => {
@@ -143,12 +180,14 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
     };
     setFilms(prev => [newFilm, ...prev]);
     setEditingFilmId(newFilm.id);
+    triggerSaveToast();
   };
 
   const deleteFilm = (filmId: string, title: string) => {
     if (window.confirm(`'${title}' 작품을 정말로 삭제하시겠습니까?`)) {
       setFilms(prev => prev.filter(f => f.id !== filmId));
       setEditingFilmId(null);
+      triggerSaveToast();
     }
   };
 
@@ -159,6 +198,7 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
       }
       return f;
     }));
+    triggerSaveToast();
   };
 
   const removeStill = (filmId: string, index: number) => {
@@ -169,6 +209,7 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
       }
       return f;
     }));
+    triggerSaveToast();
   };
 
   if (!isAuthenticated) {
@@ -197,7 +238,7 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
   }
 
   return (
-    <div className="min-h-screen bg-cinematic-black pt-28 pb-20">
+    <div className="min-h-screen bg-cinematic-black pt-28 pb-20 relative">
       <div className="container mx-auto px-6">
         <div className="flex justify-between items-center mb-12 border-b border-neutral-800 pb-6">
           <h2 className="text-4xl font-serif text-white tracking-tighter flex items-center gap-3">
@@ -215,19 +256,19 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-xs uppercase text-neutral-500 mb-2">Name</label>
-                <input value={directorInfo.name} onChange={(e) => setDirectorInfo(prev => ({...prev, name: e.target.value}))} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" />
+                <input value={directorInfo.name} onChange={(e) => { setDirectorInfo(prev => ({...prev, name: e.target.value})); triggerSaveToast(); }} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" />
               </div>
               <div>
                 <label className="block text-xs uppercase text-neutral-500 mb-2">Korean Name</label>
-                <input value={directorInfo.koreanName} onChange={(e) => setDirectorInfo(prev => ({...prev, koreanName: e.target.value}))} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" />
+                <input value={directorInfo.koreanName} onChange={(e) => { setDirectorInfo(prev => ({...prev, koreanName: e.target.value})); triggerSaveToast(); }} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" />
               </div>
               <div className="md:col-span-2">
                 <label className="block text-xs uppercase text-neutral-500 mb-2">Tagline</label>
-                <input value={directorInfo.tagline} onChange={(e) => setDirectorInfo(prev => ({...prev, tagline: e.target.value}))} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" />
+                <input value={directorInfo.tagline} onChange={(e) => { setDirectorInfo(prev => ({...prev, tagline: e.target.value})); triggerSaveToast(); }} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" />
               </div>
               <div className="md:col-span-2">
                 <label className="block text-xs uppercase text-neutral-500 mb-2">Bio</label>
-                <textarea value={directorInfo.bio} onChange={(e) => setDirectorInfo(prev => ({...prev, bio: e.target.value}))} rows={4} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" />
+                <textarea value={directorInfo.bio} onChange={(e) => { setDirectorInfo(prev => ({...prev, bio: e.target.value})); triggerSaveToast(); }} rows={4} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" />
               </div>
             </div>
           </section>
@@ -246,14 +287,24 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
                 onDrop={handleHeroDrop}
               >
                 <img src={directorInfo.heroImageUrl} className="w-full h-full object-cover opacity-50" alt="Hero Bg" />
+                
+                {/* Processing Overlay */}
+                {processingId === 'hero' && (
+                  <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center z-20">
+                    <Loader2 className="text-cinematic-accent animate-spin mb-2" size={32} />
+                    <span className="text-[10px] uppercase font-bold text-white tracking-widest">Processing...</span>
+                  </div>
+                )}
+
                 <label className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
                   <Upload size={32} className="text-white mb-2" />
                   <span className="text-xs text-white uppercase font-bold px-4 text-center">드래그하거나 클릭하여 업로드</span>
                   <input type="file" className="hidden" accept="image/*" onChange={(e) => {
                     const file = e.target.files?.[0];
-                    if (file) processImage(file, (base64) => setDirectorInfo(prev => ({ ...prev, heroImageUrl: base64 })));
+                    if (file) processImage(file, 'hero', (base64) => setDirectorInfo(prev => ({ ...prev, heroImageUrl: base64 })));
                   }} />
                 </label>
+                
                 {dragActiveId === 'hero' && (
                   <div className="absolute inset-0 bg-cinematic-accent/20 flex items-center justify-center border-2 border-cinematic-accent animate-pulse">
                     <span className="text-white font-bold uppercase tracking-widest text-sm">Drop to Upload</span>
@@ -325,6 +376,15 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
                           onDrop={(e) => handleDrop(e, film.id, 'poster')}
                         >
                            <img src={film.posterUrl} className="w-full h-full object-cover" alt="" />
+                           
+                           {/* Processing Overlay */}
+                           {processingId === `poster-${film.id}` && (
+                             <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center z-20">
+                               <Loader2 className="text-cinematic-accent animate-spin mb-2" size={32} />
+                               <span className="text-[10px] uppercase font-bold text-white tracking-widest">Processing...</span>
+                             </div>
+                           )}
+
                            <label className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                               <Upload size={24} className="mb-2" />
                               <span className="text-xs text-center px-4 uppercase font-bold">이미지 드롭 또는 클릭</span>
@@ -379,32 +439,44 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
                           </button>
                        </div>
                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                          {film.stillUrls.map((url, i) => (
-                            <div 
-                              key={i} 
-                              className={`relative aspect-video rounded border-2 transition-all overflow-hidden group ${dragActiveId === `still-${film.id}-${i}` ? 'border-cinematic-accent scale-[1.05] z-10 shadow-xl' : 'border-neutral-800'}`}
-                              onDragEnter={(e) => handleDrag(e, `still-${film.id}-${i}`)}
-                              onDragOver={(e) => handleDrag(e, `still-${film.id}-${i}`)}
-                              onDragLeave={(e) => handleDrag(e, `still-${film.id}-${i}`)}
-                              onDrop={(e) => handleDrop(e, film.id, 'still', i)}
-                            >
-                               <img src={url} className="w-full h-full object-cover" alt="" />
-                               <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <label className="p-2 hover:text-cinematic-accent cursor-pointer">
-                                     <Upload size={20} />
-                                     <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, film.id, 'still', i)} />
-                                  </label>
-                                  <button onClick={() => removeStill(film.id, i)} className="p-2 hover:text-red-500">
-                                     <Trash2 size={20} />
-                                  </button>
-                               </div>
-                               {dragActiveId === `still-${film.id}-${i}` && (
-                                 <div className="absolute inset-0 bg-cinematic-accent/30 flex items-center justify-center pointer-events-none">
-                                    <span className="text-white text-[10px] font-bold uppercase">Drop</span>
+                          {film.stillUrls.map((url, i) => {
+                            const stillTargetId = `still-${film.id}-${i}`;
+                            return (
+                              <div 
+                                key={i} 
+                                className={`relative aspect-video rounded border-2 transition-all overflow-hidden group ${dragActiveId === stillTargetId ? 'border-cinematic-accent scale-[1.05] z-10 shadow-xl' : 'border-neutral-800'}`}
+                                onDragEnter={(e) => handleDrag(e, stillTargetId)}
+                                onDragOver={(e) => handleDrag(e, stillTargetId)}
+                                onDragLeave={(e) => handleDrag(e, stillTargetId)}
+                                onDrop={(e) => handleDrop(e, film.id, 'still', i)}
+                              >
+                                 <img src={url} className="w-full h-full object-cover" alt="" />
+                                 
+                                 {/* Processing Overlay */}
+                                 {processingId === stillTargetId && (
+                                   <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center z-20">
+                                      <Loader2 className="text-cinematic-accent animate-spin mb-1" size={24} />
+                                      <span className="text-[8px] uppercase font-bold text-white tracking-widest">Processing...</span>
+                                   </div>
+                                 )}
+
+                                 <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <label className="p-2 hover:text-cinematic-accent cursor-pointer">
+                                       <Upload size={20} />
+                                       <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, film.id, 'still', i)} />
+                                    </label>
+                                    <button onClick={() => removeStill(film.id, i)} className="p-2 hover:text-red-500">
+                                       <Trash2 size={20} />
+                                    </button>
                                  </div>
-                               )}
-                            </div>
-                          ))}
+                                 {dragActiveId === stillTargetId && (
+                                   <div className="absolute inset-0 bg-cinematic-accent/30 flex items-center justify-center pointer-events-none">
+                                      <span className="text-white text-[10px] font-bold uppercase">Drop</span>
+                                   </div>
+                                 )}
+                              </div>
+                            );
+                          })}
                        </div>
                     </div>
 
@@ -418,6 +490,14 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
           </div>
         </section>
       </div>
+
+      {/* Global Save Toast */}
+      {showSaveToast && (
+        <div className="fixed bottom-10 right-10 bg-cinematic-accent text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 animate-fade-in-up z-[300]">
+           <CheckCircle2 size={18} />
+           <span className="text-xs font-bold uppercase tracking-widest">Changes Saved</span>
+        </div>
+      )}
     </div>
   );
 };
