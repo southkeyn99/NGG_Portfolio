@@ -1,30 +1,31 @@
+
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { FILMS } from '../constants';
 import { Film } from '../types';
-import { X, Award, ChevronLeft, ChevronRight, Users, Clapperboard } from 'lucide-react';
+import { X, Award, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface FilmographyProps {
   title?: string;
   category: 'directing' | 'cinematography' | 'staff';
+  films: Film[];
 }
 
-const Filmography: React.FC<FilmographyProps> = ({ title, category }) => {
+const Filmography: React.FC<FilmographyProps> = ({ title, category, films }) => {
   const [selectedFilm, setSelectedFilm] = useState<Film | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const filteredFilms = useMemo(() => {
-    return FILMS.filter(film => {
-      const role = film.role.toLowerCase();
+    return films.filter(film => {
+      const role = (film.role || "").toLowerCase();
       if (category === 'directing') {
         return role.includes('director') && !role.includes('assistant') && !role.includes('lighting');
       } else if (category === 'cinematography') {
         return role.includes('cinematographer') || role.includes('d.o.p');
       } else if (category === 'staff') {
-        return !role.includes('director') && !role.includes('cinematographer') || role.includes('assistant') || role.includes('gaffer');
+        return (!role.includes('director') && !role.includes('cinematographer')) || role.includes('assistant') || role.includes('gaffer');
       }
       return true;
     });
-  }, [category]);
+  }, [category, films]);
 
   const displayTitle = title || (category === 'directing' ? 'FILMOGRAPHY' : category.toUpperCase());
 
@@ -39,24 +40,36 @@ const Filmography: React.FC<FilmographyProps> = ({ title, category }) => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (lightboxIndex === null) return;
-      
-      switch(e.key) {
-        case 'Escape':
-          setLightboxIndex(null);
-          break;
-        case 'ArrowLeft':
-          navigateLightbox(-1);
-          break;
-        case 'ArrowRight':
-          navigateLightbox(1);
-          break;
+      if (lightboxIndex === null && selectedFilm) {
+        if (e.key === 'Escape') setSelectedFilm(null);
+      } else if (lightboxIndex !== null) {
+        switch(e.key) {
+          case 'Escape': setLightboxIndex(null); break;
+          case 'ArrowLeft': navigateLightbox(-1); break;
+          case 'ArrowRight': navigateLightbox(1); break;
+        }
       }
     };
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [lightboxIndex, navigateLightbox]);
+  }, [lightboxIndex, selectedFilm, navigateLightbox]);
+
+  // Helper to split title into main and sub (English)
+  const renderTitle = (title: string, mainClass: string, subClass: string) => {
+    const match = title.match(/^(.*?)(\s*\(.*\))$/);
+    if (match) {
+      return (
+        <>
+          <span className={mainClass}>{match[1].trim()}</span>
+          <span className={`${subClass} opacity-40 font-sans font-light ml-3 inline-block transform translate-y-[-0.1em]`}>
+            {match[2].trim()}
+          </span>
+        </>
+      );
+    }
+    return <span className={mainClass}>{title}</span>;
+  };
 
   return (
     <div className="min-h-screen bg-cinematic-black pt-24 pb-20">
@@ -70,84 +83,48 @@ const Filmography: React.FC<FilmographyProps> = ({ title, category }) => {
             <p className="text-xl font-light">No works found in this category yet.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-16">
+          <div className="grid grid-cols-1 gap-24">
             {filteredFilms.map((film, index) => (
               <div 
                 key={film.id} 
-                className={`flex flex-col md:flex-row gap-8 md:gap-12 group cursor-pointer ${
+                className={`flex flex-col md:flex-row gap-8 md:gap-16 group cursor-pointer ${
                   index % 2 === 1 ? 'md:flex-row-reverse' : ''
                 }`}
                 onClick={() => setSelectedFilm(film)}
               >
-                {/* Poster/Image */}
-                <div className="w-full md:w-5/12 lg:w-4/12 relative overflow-hidden">
+                <div className="w-full md:w-5/12 lg:w-4/12 relative overflow-hidden shadow-2xl">
                   <div className="aspect-[2/3] w-full overflow-hidden bg-neutral-900">
                     <img 
                       src={film.posterUrl} 
                       alt={film.title} 
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-80 group-hover:opacity-100"
+                      className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
                       style={{ objectPosition: film.posterObjectPosition || 'center' }}
                     />
                   </div>
-                  {/* Hover Overlay */}
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                    <span className="text-white border border-white px-6 py-2 text-sm tracking-widest uppercase">View Details</span>
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                    <span className="text-white border border-white px-8 py-3 text-sm tracking-[0.2em] uppercase bg-black/20 backdrop-blur-sm">View Details</span>
                   </div>
                 </div>
 
-                {/* Info */}
                 <div className="w-full md:w-7/12 lg:w-8/12 flex flex-col justify-center items-start">
-                  
-                  {/* Year displayed separately: Orange, Bold, Slightly Bigger */}
-                  <span className="text-cinematic-accent text-base font-bold tracking-wider mb-2 block">{film.year}</span>
-
-                  <h3 className="text-3xl md:text-5xl font-serif text-white mb-3 leading-tight group-hover:text-neutral-300 transition-colors">
-                    {film.title}
+                  <span className="text-cinematic-accent text-lg font-bold tracking-widest mb-4 block">{film.year}</span>
+                  <h3 className="font-serif text-white mb-6 leading-tight group-hover:text-neutral-200 transition-colors tracking-tight">
+                    {renderTitle(film.title, "text-4xl md:text-6xl", "text-xl md:text-3xl")}
                   </h3>
-
-                  {film.productionNote && (
-                    <p className="text-white/70 italic text-sm mb-4 font-serif border-l border-white/30 pl-3">
-                      {film.productionNote}
-                    </p>
-                  )}
-                  
-                  {/* Orange Metadata Row: AI | Genre | Runtime | Aspect Ratio */}
-                  <div className="text-cinematic-accent text-sm font-medium tracking-wide mb-6 flex flex-wrap gap-2 items-center">
-                    {film.isAi && (
-                        <>
-                            <span>AI</span>
-                            <span className="text-cinematic-accent opacity-60">|</span>
-                        </>
-                    )}
+                  <div className="text-cinematic-accent text-sm font-bold tracking-[0.1em] mb-8 flex flex-wrap gap-4 items-center uppercase">
                     <span>{film.genre}</span>
-                    <span className="text-cinematic-accent opacity-60">|</span>
+                    <span className="opacity-30">|</span>
                     <span>{film.runtime}</span>
                     {film.aspectRatio && (
                         <>
-                            <span className="text-cinematic-accent opacity-60">|</span>
+                            <span className="opacity-30">|</span>
                             <span>{film.aspectRatio}</span>
                         </>
                     )}
                   </div>
-
-                  <div className="text-neutral-500 text-xs tracking-wider mb-4 border-l-2 border-neutral-700 pl-3 uppercase">
-                    {film.role}
-                  </div>
-
-                  <p className="text-neutral-400 font-light leading-relaxed max-w-xl line-clamp-3 whitespace-pre-line mb-4">
+                  <p className="text-neutral-400 font-light text-lg leading-relaxed max-w-2xl line-clamp-3 whitespace-pre-line mb-8">
                     {film.synopsis}
                   </p>
-                  
-                  {/* Awards in Preview - Changed to Orange-500 */}
-                  {film.awards && film.awards.length > 0 && (
-                    <div className="flex flex-col gap-1 mt-2">
-                        {film.awards.map((award, i) => (
-                            <span key={i} className="text-orange-500 text-xs md:text-sm tracking-wide flex items-center gap-2 opacity-90">
-                                <Award size={14} className="shrink-0" /> {award}
-                            </span>
-                        ))}
-                    </div>
-                  )}
                 </div>
               </div>
             ))}
@@ -157,158 +134,126 @@ const Filmography: React.FC<FilmographyProps> = ({ title, category }) => {
 
       {/* Film Detail Modal */}
       {selectedFilm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/95 backdrop-blur-sm animate-fade-in">
-          <div className="relative w-full max-w-5xl bg-cinematic-dark border border-neutral-800 shadow-2xl overflow-y-auto max-h-[90vh]">
-            <button 
-              onClick={(e) => { e.stopPropagation(); setSelectedFilm(null); }}
-              className="absolute top-4 right-4 text-neutral-400 hover:text-white z-10 p-2"
-            >
-              <X size={32} />
-            </button>
+        <div className="fixed inset-0 z-[100] bg-black animate-fade-in overflow-y-auto no-scrollbar">
+          <button 
+            onClick={() => setSelectedFilm(null)}
+            className="fixed top-8 right-8 text-neutral-500 hover:text-white z-[110] transition-transform hover:scale-110"
+          >
+            <X size={32} strokeWidth={1.5} />
+          </button>
 
-            <div className="flex flex-col items-start">
-                <div className="w-full p-8 md:p-12">
-                    <h3 className="text-4xl font-serif text-white mb-2">{selectedFilm.title}</h3>
-                    
-                    <div className="mb-6">
-                        {/* Updated to match list style consistency */}
-                        <span className="text-cinematic-accent text-base font-bold tracking-wider block mb-1">{selectedFilm.year}</span>
-                        <p className="text-cinematic-accent text-sm tracking-wide font-medium">
-                          {selectedFilm.isAi && "AI | "}{selectedFilm.genre} | {selectedFilm.runtime} {selectedFilm.aspectRatio ? `| ${selectedFilm.aspectRatio}` : ''}
-                        </p>
-                    </div>
-                    
-                    <div className="space-y-6 text-neutral-300 font-light">
-                        {selectedFilm.productionNote && (
-                          <div className="p-4 bg-white/5 border-l-2 border-cinematic-accent italic text-white/90">
-                            {selectedFilm.productionNote}
-                          </div>
-                        )}
-
-                        <div>
-                            <h4 className="text-white text-sm font-bold uppercase mb-2 tracking-wider">Synopsis</h4>
-                            <p className="leading-relaxed opacity-80 whitespace-pre-line">{selectedFilm.synopsis}</p>
-                        </div>
-                        
-                        <div>
-                            <h4 className="text-white text-sm font-bold uppercase mb-2 tracking-wider">Role</h4>
-                            <p className="leading-relaxed opacity-80">{selectedFilm.role}</p>
-                        </div>
-
-                        {/* Credits Section (Cast & Crew) */}
-                        {(selectedFilm.cast || selectedFilm.crew) && (
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 py-6 border-t border-b border-neutral-800">
-                             {/* Crew */}
-                             {selectedFilm.crew && selectedFilm.crew.length > 0 && (
-                               <div>
-                                  <h4 className="text-white text-sm font-bold uppercase mb-3 tracking-wider flex items-center gap-2">
-                                    <Clapperboard size={16} /> Crew
-                                  </h4>
-                                  <ul className="space-y-1 text-sm">
-                                     {selectedFilm.crew.map((member, i) => (
-                                       <li key={i} className="flex justify-between items-center text-neutral-400">
-                                          <span className="opacity-70">{member.role}</span>
-                                          <span className="text-white">{member.name}</span>
-                                       </li>
-                                     ))}
-                                  </ul>
-                               </div>
-                             )}
-                             
-                             {/* Cast */}
-                             {selectedFilm.cast && selectedFilm.cast.length > 0 && (
-                               <div>
-                                  <h4 className="text-white text-sm font-bold uppercase mb-3 tracking-wider flex items-center gap-2">
-                                    <Users size={16} /> Cast
-                                  </h4>
-                                  <ul className="space-y-1 text-sm">
-                                     {selectedFilm.cast.map((actor, i) => (
-                                       <li key={i} className="flex justify-between items-center text-neutral-400">
-                                          <span className="opacity-70">{actor.role}</span>
-                                          <span className="text-white">{actor.name}</span>
-                                       </li>
-                                     ))}
-                                  </ul>
-                               </div>
-                             )}
-                          </div>
-                        )}
-
-                        {/* Awards Section - Changed to Orange-500 */}
-                        {selectedFilm.awards && selectedFilm.awards.length > 0 && (
-                            <div>
-                                <h4 className="text-orange-500 text-sm font-bold uppercase mb-2 tracking-wider flex items-center gap-2">
-                                    <Award size={16} /> Awards & Festivals
-                                </h4>
-                                <ul className="list-disc list-inside text-sm text-orange-500 space-y-1">
-                                    {selectedFilm.awards.map((award, i) => (
-                                        <li key={i}>{award}</li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
-
-                        <div className="mt-8 grid grid-cols-2 gap-4">
-                            {selectedFilm.stillUrls.map((url, i) => (
-                                <img 
-                                  key={i} 
-                                  src={url} 
-                                  alt={`Still ${i + 1}`} 
-                                  className="w-full aspect-video object-cover grayscale hover:grayscale-0 transition-all duration-500 cursor-zoom-in border border-transparent hover:border-cinematic-accent/50" 
-                                  onClick={() => setLightboxIndex(i)}
-                                />
-                            ))}
-                        </div>
-                    </div>
-                </div>
+          <div className="container mx-auto px-6 py-20 md:py-32 max-w-5xl">
+            {/* Title Section */}
+            <div className="mb-12">
+              <h3 className="font-serif text-white mb-6 tracking-tight leading-tight">
+                {renderTitle(selectedFilm.title, "text-5xl md:text-7xl", "text-2xl md:text-4xl")}
+              </h3>
+              <p className="text-white text-xl md:text-2xl font-medium mb-4 opacity-90">{selectedFilm.year}</p>
+              <div className="text-cinematic-accent text-xs md:text-sm font-bold tracking-[0.15em] flex flex-wrap gap-3 items-center uppercase">
+                <span>{selectedFilm.genre}</span>
+                <span className="opacity-40">|</span>
+                <span>{selectedFilm.runtime}</span>
+                {selectedFilm.aspectRatio && (
+                  <>
+                    <span className="opacity-40">|</span>
+                    <span>{selectedFilm.aspectRatio}</span>
+                  </>
+                )}
+              </div>
             </div>
+
+            {/* Synopsis Section */}
+            <div className="mb-16">
+              <h4 className="text-neutral-500 text-[10px] md:text-xs font-bold uppercase mb-6 tracking-[0.4em]">SYNOPSIS</h4>
+              <p className="text-white text-lg md:text-xl font-light leading-[1.85] whitespace-pre-line max-w-3xl">
+                {selectedFilm.synopsis}
+              </p>
+            </div>
+
+            {/* Role Section */}
+            <div className="mb-16">
+              <h4 className="text-neutral-500 text-[10px] md:text-xs font-bold uppercase mb-6 tracking-[0.4em]">ROLE</h4>
+              <p className="text-white text-lg md:text-xl font-light">
+                {selectedFilm.role}
+              </p>
+            </div>
+
+            {/* Awards & Festivals Section */}
+            {selectedFilm.awards && selectedFilm.awards.length > 0 && (
+              <div className="mb-20">
+                <div className="flex items-center gap-3 mb-8">
+                  <Award size={16} className="text-cinematic-accent" strokeWidth={2} />
+                  <h4 className="text-cinematic-accent text-[10px] md:text-xs font-bold uppercase tracking-[0.3em]">AWARDS & FESTIVALS</h4>
+                </div>
+                <ul className="space-y-2.5">
+                  {selectedFilm.awards.map((award, i) => (
+                    <li key={i} className="text-cinematic-accent/90 text-sm md:text-base flex items-start gap-4">
+                      <span className="mt-1.5 w-1.5 h-1.5 bg-cinematic-accent rounded-full shrink-0"></span>
+                      <span className="font-light">{award}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Stills Gallery */}
+            {selectedFilm.stillUrls && selectedFilm.stillUrls.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-12 border-t border-neutral-900">
+                {selectedFilm.stillUrls.map((url, i) => (
+                  <div key={i} className="overflow-hidden bg-neutral-900 aspect-video group shadow-2xl">
+                    <img 
+                      src={url} 
+                      alt={`Still ${i + 1}`} 
+                      className="w-full h-full object-cover cursor-zoom-in transition-transform duration-700 group-hover:scale-105" 
+                      onClick={() => setLightboxIndex(i)}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {/* Full Screen Image Lightbox with Navigation */}
+      {/* Lightbox for Stills */}
       {lightboxIndex !== null && selectedFilm && (
         <div 
-          className="fixed inset-0 z-[60] bg-black/95 flex items-center justify-center p-4 cursor-zoom-out animate-fade-in select-none"
+          className="fixed inset-0 z-[200] bg-black/98 flex items-center justify-center p-4 cursor-zoom-out animate-fade-in select-none"
           onClick={() => setLightboxIndex(null)}
         >
-          {/* Close Button */}
           <button 
-            className="absolute top-6 right-6 text-white/70 hover:text-white transition-colors p-2 z-[70]"
+            className="absolute top-10 right-10 text-white/50 hover:text-white transition-all p-3 z-[210] hover:scale-110"
             onClick={() => setLightboxIndex(null)}
           >
-            <X size={40} />
+            <X size={48} />
           </button>
 
-          {/* Previous Button */}
           {lightboxIndex > 0 && (
              <button
-                className="absolute left-2 md:left-8 text-white/50 hover:text-white transition-colors p-2 z-[70] cursor-pointer"
+                className="absolute left-4 md:left-12 text-white/30 hover:text-white transition-all p-4 z-[210] cursor-pointer hover:scale-110"
                 onClick={(e) => { e.stopPropagation(); navigateLightbox(-1); }}
              >
-                <ChevronLeft size={48} />
+                <ChevronLeft size={64} />
              </button>
           )}
 
           <img 
             src={selectedFilm.stillUrls[lightboxIndex]} 
             alt={`Still ${lightboxIndex + 1}`} 
-            className="max-h-[90vh] max-w-[90vw] object-contain shadow-2xl" 
+            className="max-h-[95vh] max-w-[95vw] object-contain shadow-2xl" 
             onClick={(e) => e.stopPropagation()} 
           />
 
-           {/* Next Button */}
            {lightboxIndex < selectedFilm.stillUrls.length - 1 && (
              <button
-                className="absolute right-2 md:right-8 text-white/50 hover:text-white transition-colors p-2 z-[70] cursor-pointer"
+                className="absolute right-4 md:right-12 text-white/30 hover:text-white transition-all p-4 z-[210] cursor-pointer hover:scale-110"
                 onClick={(e) => { e.stopPropagation(); navigateLightbox(1); }}
              >
-                <ChevronRight size={48} />
+                <ChevronRight size={64} />
              </button>
           )}
 
-          {/* Counter Indicator */}
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/50 text-sm tracking-widest font-mono">
+          <div className="absolute bottom-12 left-1/2 -translate-x-1/2 text-white/40 text-sm tracking-[0.5em] font-mono">
             {lightboxIndex + 1} / {selectedFilm.stillUrls.length}
           </div>
         </div>

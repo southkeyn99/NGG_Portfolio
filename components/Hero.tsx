@@ -1,15 +1,22 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Play, ArrowRight } from 'lucide-react';
 import { DIRECTOR_INFO } from '../constants';
 
-const Hero: React.FC = () => {
+interface HeroProps {
+  imageUrl?: string;
+}
+
+const Hero: React.FC<HeroProps> = ({ imageUrl }) => {
+  const bgImage = imageUrl || DIRECTOR_INFO.heroImageUrl;
+
   return (
     <section className="relative h-screen w-full overflow-hidden flex items-center justify-center">
       {/* Background Media */}
       <div className="absolute inset-0 z-0">
         <img 
-          src="https://postfiles.pstatic.net/MjAyNTEyMTNfMTk0/MDAxNzY1NjMyMzkyNzY4.qGMXRH7uhj6tpI_iG9iWjP44If2ojH2tdV3UzZ44N6Ig.ImRJwctv8JvQQ3kXLuKawpfGRxOcSLX0_yWZ50zAwWIg.JPEG/5.jpg?type=w3840" 
+          src={bgImage} 
           alt="Hero Background" 
           className="w-full h-full object-cover opacity-60 grayscale blur-sm scale-105"
         />

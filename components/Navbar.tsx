@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Lock } from 'lucide-react';
 import { DIRECTOR_INFO } from '../constants';
 
 const Navbar: React.FC = () => {
@@ -16,7 +17,6 @@ const Navbar: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Close mobile menu when route changes
   useEffect(() => {
     setIsOpen(false);
   }, [location]);
@@ -47,12 +47,20 @@ const Navbar: React.FC = () => {
         </NavLink>
 
         {/* Desktop Menu */}
-        <div className="hidden lg:flex space-x-8 xl:space-x-12 overflow-x-auto no-scrollbar">
+        <div className="hidden lg:flex items-center space-x-8 xl:space-x-12 overflow-x-auto no-scrollbar">
           {navLinks.map((link) => (
             <NavLink key={link.name} to={link.path} className={getLinkClass}>
               {link.name}
             </NavLink>
           ))}
+          <NavLink to="/admin" className={({ isActive }) => 
+            `flex items-center gap-1 text-xs tracking-widest uppercase py-1 px-3 border border-white/20 rounded-full transition-all ${
+              isActive ? 'bg-white text-black border-white' : 'text-neutral-500 hover:text-white hover:border-white'
+            }`
+          }>
+            <Lock size={12} />
+            Admin
+          </NavLink>
         </div>
 
         {/* Mobile Menu Button */}
@@ -81,6 +89,9 @@ const Navbar: React.FC = () => {
             {link.name}
           </NavLink>
         ))}
+        <NavLink to="/admin" className="text-neutral-500 text-lg tracking-widest uppercase flex items-center gap-2">
+          <Lock size={18} /> Admin
+        </NavLink>
       </div>
     </nav>
   );

@@ -1,3 +1,4 @@
+
 import { Film, StillImage } from './types';
 
 export const DIRECTOR_INFO = {
@@ -11,6 +12,7 @@ export const DIRECTOR_INFO = {
   youtube: "www.youtube.com/@소질소",
   vimeo: "vimeo.com/namgunggeon",
   profileImage: "https://search.pstatic.net/common?type=b&size=3000&quality=100&direct=true&src=http%3A%2F%2Fsstatic.naver.net%2Fpeople%2FprofileImg%2Fd1c4b775-c5a5-435d-a4ba-c3d99f33a3da.jpg",
+  heroImageUrl: "https://postfiles.pstatic.net/MjAyNTEyMTNfMTk0/MDAxNzY1NjMyMzkyNzY4.qGMXRH7uhj6tpI_iG9iWjP44If2ojH2tdV3UzZ44N6Ig.ImRJwctv8JvQQ3kXLuKawpfGRxOcSLX0_yWZ50zAwWIg.JPEG/5.jpg?type=w3840",
   bio: `시각적 스타일과 감정의 흐름을 중시하는 감독이자 촬영감독.
   영화적 미장센을 통해 이야기의 본질을 탐구합니다.`,
   awards: [
@@ -24,33 +26,6 @@ export const DIRECTOR_INFO = {
 export const FILMS: Film[] = [
   // Directing Works
   {
-    id: 'f2026_1',
-    title: "지영이 찾기",
-    year: "2026",
-    role: "Director / Writer",
-    runtime: "Pre-production",
-    genre: "Drama",
-    synopsis: "2026년 제작 예정.",
-    aspectRatio: "TBD",
-    posterUrl: "https://placehold.co/600x900/0a0a0a/444444/png?text=Coming+Soon",
-    stillUrls: [],
-    awards: [],
-    crew: [
-      { role: "연출", name: "남궁건" },
-      { role: "조연출", name: "이시영" },
-      { role: "라인피디", name: "김지현" },
-      { role: "촬영감독", name: "고은지" },
-      { role: "촬영부", name: "김나연" },
-      { role: "조명감독", name: "윤찬우" },
-      { role: "동시녹음", name: "이신희" }
-    ],
-    cast: [
-      { role: "재성", name: "박현" },
-      { role: "지영", name: "박예나" },
-      { role: "수빈", name: "신아진" }
-    ]
-  },
-  {
     id: 'f2025_2',
     title: "아부지 (Panic Disorder)",
     year: "2025",
@@ -60,7 +35,7 @@ export const FILMS: Film[] = [
     synopsis: `어릴적 아버지의 폭력으로 집을 나온 이후, 공황장애를 얻게 된 현수.
     20년만에 누나의 부탁으로 치매에 걸린 아버지를 돌보게 된다.`,
     aspectRatio: "1.85:1",
-    posterUrl: "https://postfiles.pstatic.net/MjAyNTEyMTNfMTIx/MDAxNzY1NjMyMzkyNzQ0.UCdSO4yUwrI_rYk5Ks0cX2LqOzvCePEwIf6HwftxEI0g.42OXJv4VWBA32EJQH12r8EMTFPzdaBxjwpa0Da8I7lsg.JPEG/3.jpg?type=w3840",
+    posterUrl: "https://postfiles.pstatic.net/MjAyNTEyMTNfMTIx/MDAxNzY1NjMyMzkyNzY0.UCdSO4yUwrI_rYk5Ks0cX2LqOzvCePEwIf6HwftxEI0g.42OXJv4VWBA32EJQH12r8EMTFPzdaBxjwpa0Da8I7lsg.JPEG/3.jpg?type=w3840",
     posterObjectPosition: "25% center",
     stillUrls: [
       "https://postfiles.pstatic.net/MjAyNTEyMTNfMyAg/MDAxNzY1NjMyMzkyNjg3.tjcyaLooyqUfS_yjpW94h1gO8jKBya88qxyH6VqlLPQg.UjXaFqnX6IsYM8oSJSs960tUp1jqAJIBik1rCu58X4og.JPEG/1.jpg?type=w3840",
@@ -116,7 +91,7 @@ export const FILMS: Film[] = [
     role: "Director / Writer",
     runtime: "20min 10sec",
     genre: "Fantasy, Thriller",
-    synopsis: `“죽은 사람 무덤 앞에서 춤을 추면, 그 사람의 영혼을 부를 수 있대.”
+    synopsis: `“죽은 사람 무덤 앞에서 춤을 추면, 그 person의 영혼을 부를 수 있대.”
     지애는 아버지의 무덤 앞에서 탭 댄스를 추려고 한다. 도애는 그런 언니가 미쳤다고만 생각했다.`,
     aspectRatio: "2:1",
     posterUrl: "https://postfiles.pstatic.net/MjAyNTEyMTNfMjg3/MDAxNzY1NjM2MDc4NTQx.sPoOjQ4PUwnxyc-0G6D63l4HLqhZ4nUYPIGz_uJ6WwMg.aBHR2AFHLiRCFe7vjFqUtWqgGkphfsW7UQptJ0kLXNog.JPEG/도애의_시간_포스터.jpg?type=w3840",
@@ -128,7 +103,7 @@ export const FILMS: Film[] = [
       "https://postfiles.pstatic.net/MjAyNTEyMTNfNjIg/MDAxNzY1NjM1OTk4ODA2.-6KTY03BFiqyeo8NBkpXhb9gT_nS13TqKunRx074jvcg.AMm8I2mGLuJ3GKzsFQUu7svgaJJUH4uDFcqpUrKvALIg.JPEG/스크린샷_2025-12-13_오후_11.18.18.jpg?type=w3840",
       "https://postfiles.pstatic.net/MjAyNTEyMTNfMjcz/MDAxNzY1NjM1OTk4ODA2.-6KTY03BFiqyeo8NBkpXhb9gT_nS13TqKunRx074jvcg.AMm8I2mGLuJ3GKzsFQUu7svgaJJUH4uDFcqpUrKvALIg.JPEG/스크린샷_2025-12-13_오후_11.18.18.jpg?type=w3840",
       "https://postfiles.pstatic.net/MjAyNTEyMTNfMjcz/MDAxNzY1NjM1OTk4ODA5.nIjrcG47zF--KiPnnCHxQnqoyvBbmZ741ttTfvvDjHYg.3lgWbQv7tIjUW5JrL-QYhZeu9WGQPER0Vh9ZeJ_hFRgg.JPEG/스크린샷_2025-12-13_오후_11.19.15.jpg?type=w3840",
-      "https://postfiles.pstatic.net/MjAyNTEyMTNfMTcg/MDAxNzY1NjM1OTk5MjA4.MTdTlcF75dNdhygANdkrFuucgJwe1w9jT4mo5mvpgmwg.eiDpirXWYglUrVbUfYVht2r7saSKsQJUtfHnlVSqmesg.JPEG/스크린샷_2025-12-13_오후_11.20.16.jpg?type=w3840",
+      "https://postfiles.pstatic.net/MjAyNTEyMTNfMTYv/MDAxNzY1NjM1OTk5MjA4.MTdTlcF75dNdhygANdkrFuucgJwe1w9jT4mo5mvpgmwg.eiDpirXWYglUrVbUfYVht2r7saSKsQJUtfHnlVSqmesg.JPEG/스크린샷_2025-12-13_오후_11.20.16.jpg?type=w3840",
       "https://postfiles.pstatic.net/MjAyNTEyMTNfMjk2/MDAxNzY1NjM1OTk5MjA1.GL1ztwu4HBJpASl10565eQqdorQoW3xJoC9L7KvNfGUg.MSTa1X-3Bejs-S_d9kPJc4bwqiFOjP_QKTrTQcmRP0Qg.JPEG/스크린샷_2025-12-13_오후_11.20.43.jpg?type=w3840"
     ],
     awards: [
@@ -153,11 +128,10 @@ export const FILMS: Film[] = [
     stillUrls: [
       "https://postfiles.pstatic.net/MjAyNTEyMTRfMTU0/MDAxNzY1NjQxMzk5Nzc2.L4i9TQJpvHSI15q3-2O3NaEB8r-fUSDtgK2R0cprgmMg.qVHBfOER61SB1zK2HYP3akd6oLUmeQWEqhqXTMXgN-Ag.JPEG/IMG_8620.jpg?type=w3840",
       "https://postfiles.pstatic.net/MjAyNTEyMTRfMjI4/MDAxNzY1NjQxMzk5NzU3.yj1meF8Ay-1qYbeRKBdnp0vz_MBCc4E05h-Qzwzzqc4g.ArQ3TXGkG_OzzFnldKdUTqRSx8UkbUkE1pzNt94GBCog.JPEG/IMG_8619.jpg?type=f100_webp",
-      "https://postfiles.pstatic.net/MjAyNTEyMTRfNTkg/MDAxNzY1NjQxMzk5Nzg5.E6iMYHurisR5dWDN9S2oD7QrkIdn29rPWvDkKl9gy04g.9dIeUFzu7ZPcHQeIrJwXfLGARM23GjnS0TrRYfLZfZIg.JPEG/IMG_8621.jpg?type=w3840",
-      "https://postfiles.pstatic.net/MjAyNTEyMTRfMTg1/MDAxNzY1NjQxMzk5Nzg4.BmrjtuSu7YBT37wCv4VxyPtllwBAz4Ltymz0H18czuIg.1s0mUKRhUoZTNbx4Bsfnq84cIjLvv5QtBYtMGMD8mpkg.JPEG/IMG_8622.jpg?type=w3840",
+      "https://postfiles.pstatic.net/MjAyNTEyMTRfMTgy/MDAxNzY1NjQxMzk5Nzg4.BmrjtuSu7YBT37wCv4VxyPtllwBAz4Ltymz0H18czuIg.1s0mUKRhUoZTNbx4Bsfnq84cIjLvv5QtBYtMGMD8mpkg.JPEG/IMG_8622.jpg?type=w3840",
       "https://postfiles.pstatic.net/MjAyNTEyMTRfMjMw/MDAxNzY1NjQxMzk5Nzc3.T3W8JPlJrAnBPz_vWOnX90nc50vAhIvz3goYQl_lMHAg.yT9GESYHOC-CNVchQAn9977A6kHA6v78RIQx79kyRdsg.JPEG/IMG_8623.jpg?type=w3840",
       "https://postfiles.pstatic.net/MjAyNTEyMTRfMTk4/MDAxNzY1NjQxMzk5ODAw.Fk59l-MZ2pMoSq4Lk81BfHs1EaCEUOdK4rkr_aqJkQYg.ZhQNg-iCCfd13roXrlM8jpaDSHfZ8IpFpYAOgFJFMDYg.JPEG/IMG_8624.jpg?type=w3840",
-      "https://postfiles.pstatic.net/MjAyNTEyMTRfMTk3/MDAxNzY1NjQxNDAwMjEy.WGg8rydPxB-2CJQ2rTg3SLE7_zCexYoKyfO5l0IXr94g.Qx1vXet1pfeUMHFKv2qyT4ZQj0GqxzJ_PSQQBDFufq8g.JPEG/IMG_8625.jpg?type=w3840",
+      "https://postfiles.pstatic.net/MjAyNTEyMTRfMTk3/MDAxNzY1NjQxMTQwMDIxMg.WGg8rydPxB-2CJQ2rTg3SLE7_zCexYoKyfO5l0IXr94g.Qx1vXet1pfeUMHFKv2qyT4ZQj0GqxzJ_PSQQBDFufq8g.JPEG/IMG_8625.jpg?type=w3840",
       "https://postfiles.pstatic.net/MjAyNTEyMTRfMzIg/MDAxNzY1NjQxNDAwMjE3.BLpLCgp50YXS0jP5ulQw9WuHbnhWcLaO9lmfvcDORJUg.V5NZNMfFWBUk60J4Lz7yotNcTrPZXxPVEIddae_Jx2Ig.JPEG/IMG_8626.jpg?type=w3840",
       "https://postfiles.pstatic.net/MjAyNTEyMTRfMjA5/MDAxNzY1NjQxNDAwMjc2.AMGIN8Y152AnQ7UbVpipWIkLGtQOX_L-c9UAvz7ZHNsg.1fMbMpz2UCmVId1JgJ25Nnwxkkv1yOHh0NerD1uyi5og.JPEG/IMG_8628.jpg?type=w3840",
       "https://postfiles.pstatic.net/MjAyNTEyMTRfMjE5/MDAxNzY1NjQxNDAwMzc3.tm1bEotHD0PZAH4WpErM1EsgPKW8DFnMigF1BUBEZxsg.keUS_599Gz8lrEWdSjNng9cgDJ8AVaHBHtJJzo-K_mgg.JPEG/IMG_8631.jpg?type=w3840",
@@ -172,7 +146,7 @@ export const FILMS: Film[] = [
     year: "2023",
     role: "Director / Writer / Cinematographer",
     runtime: "63min 47sec",
-    genre: "Mystery",
+    genre: "장편 Mystery",
     productionNote: "백일안에 백만원으로 백분짜리 장편영화 찍기 프로젝트",
     synopsis: `해변에서 녹색 페인트를 뒤집어쓰고 실종된 의문의 여자 '서이서'
     세영은 해변에서 그녀가 버린 필름을 우연히 발견한다.
@@ -214,7 +188,7 @@ export const FILMS: Film[] = [
       "https://postfiles.pstatic.net/MjAyNTEyMTRfMTgy/MDAxNzY1NjQwNzE1MzQ0.zdb0eQFzoWSbt5zkIf8JVpJn4XNYnZ38PkppipOJ_Hkg.YbyBvY0uIKFzMjOy9oYaYuO9pMZfj7C8_FuoxOENqG8g.JPEG/스크린샷_2023-07-10_오후_5.54.14.jpeg?type=w3840",
       "https://postfiles.pstatic.net/MjAyNTEyMTRfMjk0/MDAxNzY1NjQwNzE1MzI2.FIk8zw2zvfM4eOaWbko08GWpW2xU5Ee3j0_9KjUd84Ag.l1FxIRIACAbfojIaA3gZMsBYW8Ivl4GFX4EcwCN849wg.JPEG/스크린샷_2023-07-10_오후_5.55.01.jpeg?type=w3840",
       "https://postfiles.pstatic.net/MjAyNTEyMTRfMTM1/MDAxNzY1NjQwNzE1MzQz.RjPzUxrbRIn1MvTZSWldoUdHVVDS6DEJJEGBolYm06Qg.pTD2zlmpul58eyqr3qg1qGzRwlPlOFOfi4F_3ee-TXMg.JPEG/스크린샷_2023-07-10_오후_5.56.10.jpeg?type=w3840",
-      "https://postfiles.pstatic.net/MjAyNTEyMTRfNTgg/MDAxNzY1NjQwNzE1MzI5.KxtGg3BlgYY5GIBaNHGl3M-JTNOATj5bVFWiYMLcOR4g.cm6F-hOSzQYX9qll9UsNgQ9MdHv5EMCpLS7AhQKY6yog.JPEG/스크린샷_2023-07-10_오후_5.55.41.jpeg?type=w3840"
+      "https://postfiles.pstatic.net/MjAyNTEyMTRfNTAg/MDAxNzY1NjQwNzE1MzI5.KxtGg3BlgYY5GIBaNHGl3M-JTNOATj5bVFWiYMLcOR4g.cm6F-hOSzQYX9qll9UsNgQ9MdHv5EMCpLS7AhQKY6yog.JPEG/스크린샷_2023-07-10_오후_5.55.41.jpeg?type=w3840"
     ]
   },
   {
@@ -271,11 +245,11 @@ export const FILMS: Film[] = [
     posterUrl: "https://postfiles.pstatic.net/MjAyNTEyMTRfMjM2/MDAxNzY1NjQxNjk3OTMy._fRb9JilfjOXA7W80zaA-pzJ-q5HVnb-_qwzPgJ3Y0og.MNPsnnsYdT2KfHGM9gDK2ltfFTs3-0XM3drq4Fr1WWUg.JPEG/스크린샷_2023-07-10_오후_5.37.32.jpeg?type=w580",
     stillUrls: [
       "https://postfiles.pstatic.net/MjAyNTEyMTRfMjY2/MDAxNzY1NjQxMjA2MTE4.P1n8SlGnc863N54S9cvM7UHuwu7j5qz17nkGkHEEXfwg.CryF9xwbd6rLm40NdnO3fmFMvWt3U6gALz3L9YRc-Pwg.JPEG/스크린샷_2023-07-10_오후_5.33.02.jpeg?type=w3840", // Updated 1st still
-      "https://postfiles.pstatic.net/MjAyNTEyMTRfMjU0/MDAxNzY1NjQxMjA2MTEz.WAyuaShhM70RUFiTSX2gLcY83RPvY-TPJDpGJnjXtu8g.ieuJrXxAWP92lxfDROjp43dOCRQm4hc-c9eChmECFMIg.JPEG/스크린샷_2023-07-10_오후_5.35.52.jpeg?type=w3840",
-      "https://postfiles.pstatic.net/MjAyNTEyMTRfMjQ1/MDAxNzY1NjQxMjA2MTMz.7gyofGfcy2VzdfS0nzdzyDHqY2wxeP7qeagvlGkTMC8g.hKw-JuZt8_mEOud6dDdB-yqcpntw5_4Idq4Nwr1h1Mwg.JPEG/스크린샷_2023-07-10_오후_5.36.20.jpeg?type=w3840",
-      "https://postfiles.pstatic.net/MjAyNTEyMTRfMjc0/MDAxNzY1NjQxMjA2MTIz.q8ehWPDCL45TLhXXsEURxIhMAnc65ql4RpIk7Tk_sMsg.msVAdClXUaXpLnuB31VweS_G1qoE5aA2qDRgYh5pYBIg.JPEG/스크린샷_2023-07-10_오후_5.36.39.jpeg?type=w3840",
+      "https://postfiles.pstatic.net/MjAyNTEyMTRfMjU0/MDAxNzY1NjQxMjA2MTEz.WAyuaShhM70RUFiTSX2gLcY83RPvY-TPJDpGJnjXtu8g.ieuJrXxAWP92lxfDROjp43dOCRQm4hc-c9eChmECFMIg.JPEG/스크린샷_2025-12-14_오후_5.35.52.jpeg?type=w3840",
+      "https://postfiles.pstatic.net/MjAyNTEyMTRfMjQ1/MDAxNzY1NjQxMjA2MTMz.7gyofGfcy2VzdfS0nzdzyDHqY2wxeP7qeagvlGkTMC8g.hKw-JuZt8_mEOud6dDdB-yqcpntw5_4Idq4Nwr1h1Mwg.JPEG/스크린샷_2025-12-14_오후_5.36.20.jpeg?type=w3840",
+      "https://postfiles.pstatic.net/MjAyNTEyMTRfMjc0/MDAxNzY1NjQxMjA2MTIz.q8ehWPDCL45TLhXXsEURxIhMAnc65ql4RpIk7Tk_sMsg.msVAdClXUaXpLnuB31VweS_G1qoE5aA2qDRgYh5pYBIg.JPEG/스크린샷_2025-12-14_오후_5.36.39.jpeg?type=w3840",
       "https://postfiles.pstatic.net/MjAyNTEyMTRfMTQ4/MDAxNzY1NjQxMjA2MTM1.lneA9JEC9EhQ9yEpNf_TnByMexQ_7mYQJx6KdrVVpQcg.trPNwq1B15vpDY5Qc-_6VEUQmqs9WxLc_DjXmCbWpGMg.JPEG/스크린샷_2023-07-10_오후_5.37.32.jpeg?type=w3840",
-      "https://postfiles.pstatic.net/MjAyNTEyMTRfMjAx/MDAxNzY1NjQxMjA2MTM0.pR1gDhSztp442-76Q7OCgbldS8z3xNqx_HtUR2ZGXhAg.3wwo2TmSVxGLWhEb7bjYydIadjWi-4mjebajxGq4q8cg.JPEG/스크린샷_2023-07-10_오후_5.38.54.jpeg?type=w3840",
+      "https://postfiles.pstatic.net/MjAyNTEyMTRfMjAx/MDAxNzY1NjQxMjA2MTM0.pR1gDhSztp442-76Q7OCgbldS8z3xNqx_HtUR2ZGXhAg.3wwo2TmSVxGLWhEb7bjYydIadjWi-4mjebaj~Gq4q8cg.JPEG/스크린샷_2023-07-10_오후_5.38.54.jpeg?type=w3840",
       "https://postfiles.pstatic.net/MjAyNTEyMTRfMTQ4/MDAxNzY1NjQxMjA2NjA0.f8FJiBOA9fIFTczx7goMAFE933izfIFBI7tdbYKDg8Ag.FQE-3J3RfB-FHW9rSa2WdIC9fTPBCo2ygxZiKbCExoIg.JPEG/스크린샷_2023-07-10_오후_5.39.04.jpeg?type=w3840",
       "https://postfiles.pstatic.net/MjAyNTEyMTRfMTIx/MDAxNzY1NjQxMjA2NjE0.VKB_ApPksMm2vXw3Xw2qwA29I7rHE1kqfJBN10eptFkg.PcbCWdISi9Joa4NKimKnAQ5OE3INY-YHPNDUx1xJbw0g.JPEG/스크린샷_2023-07-10_오후_5.39.42.jpeg?type=w3840"
     ]
@@ -294,7 +268,7 @@ export const FILMS: Film[] = [
     aspectRatio: "2.35:1",
     posterUrl: "https://postfiles.pstatic.net/MjAyNTEyMTRfMjgy/MDAxNzY1NjQzNTQ0ODY0.i84pekppvthEf0UMo_VWc8xQIM4CnmQRcXQlOvoqbNYg.mEqwMJGE_9cBBn7nS_xz9AfhNHpZ1MAYhdtSuLaf8o8g.JPEG/KakaoTalk_Photo_2022-01-04-12-31-49.jpeg?type=w580",
     stillUrls: [
-      "https://postfiles.pstatic.net/MjAyNTEyMTRfMTg5/MDAxNzY1NjQxMTc4MTMx.Fm8yFR6b5fFz6QOxB32tkgPgth-sawgxfMDyxsYbZ9sg.V2_FWvfp4gLdOYslxbOmrsSxeKhoFnpAYdvN5ZrFiMsg.JPEG/스크린샷_2023-07-10_오후_5.47.49.jpeg?type=w3840",
+      "https://postfiles.pstatic.net/MjAyNTEyMTRfMTg5/MDAxNzY1NjQxMTE3ODEzMS5GbTh5RlI2YjVmeFFPeEIzMnRrgPgth-sawgxfMDyxsYbZ9sg.V2_FWvfp4gLdOYslxbOmrsSxeKhoFnpAYdvN5ZrFiMsg.JPEG/스크린샷_2023-07-10_오후_5.47.49.jpeg?type=w3840",
       "https://postfiles.pstatic.net/MjAyNTEyMTRfNjgg/MDAxNzY1NjQxMTc4MTU5.IKmrJ31EOeZOITwv0Fjj86mQUDM5zag0oew_8zTiXoog.Q7xPfLJD2BEEl4Ov10KtW2KzYREbaUS22E9z8HbCjCkg.JPEG/스크린샷_2023-07-10_오후_5.48.25.jpeg?type=w3840",
       "https://postfiles.pstatic.net/MjAyNTEyMTRfMiAg/MDAxNzY1NjQxMTc4MTQ3.0I7V1GWs1WQNoE7McLGB_nDcc0ldGn6eMkPYAg4pHkcg.xvfMck0k6-TVZVh0dIgHBW9phbdpb7Mg8rrIKjSpH94g.JPEG/스크린샷_2023-07-10_오후_5.49.33.jpeg?type=w3840",
       "https://postfiles.pstatic.net/MjAyNTEyMTRfMjE4/MDAxNzY1NjQxMTc4MTQ3.0I7V1GWs1WQNoE7McLGB_nDcc0ldGn6eMkPYAg4pHkcg.xvfMck0k6-TVZVh0dIgHBW9phbdpb7Mg8rrIKjSpH94g.JPEG/스크린샷_2023-07-10_오후_5.49.33.jpeg?type=w3840",
@@ -306,7 +280,7 @@ export const FILMS: Film[] = [
 
   // Cinematography Works
   {
-    id: 'cin_2023_new1',
+    id: 'cin_2022_new1',
     title: "MAN IN DRESS",
     year: "2022",
     role: "Cinematographer / Editor / DI",
@@ -355,8 +329,8 @@ export const FILMS: Film[] = [
     role: "Cinematographer / Editor / DI",
     runtime: "14min 27sec",
     genre: "Mystery, Thriller",
-    synopsis: `사람의 운명을 파괴하는 살인자, 사람의 운명을 예측하는 역술가. 정체를 숨긴 두 사람이 철학관에서 만난다. 
-    경찰의 신분으로 위장한 살인자, 살인 사건을 목격한 역술가, 두 사람의 극적인 조우에서 살아남을 사람은 누구인가.`,
+    synopsis: `사람의 운명을 파괴하는 살인자, person의 운명을 예측하는 역술가. 정체를 숨긴 두 사람이 철학관에서 만난다. 
+    경찰의 신분으로 위장한 살인자, 살인 사건을 목격한 역술가, 두 person의 극적인 조우에서 살아남을 사람은 누구인가.`,
     posterUrl: "https://postfiles.pstatic.net/MjAyNTEyMTRfNzMg/MDAxNzY1Njg3OTE3NDU1.hh7cel-yA7_edX73UVdGpk5NYsOBtpM50-M4OgP6d2og.yykElkCBdRO0rp6Mb99FTcL_l6IO82gJP6E6R481eN8g.JPEG/스크린샷_2025-12-14_오후_1.40.59.jpg?type=w3840",
     stillUrls: [
       "https://postfiles.pstatic.net/MjAyNTEyMTRfMjAy/MDAxNzY1Njg3OTE3MzY0.wT6H4wasYB0Ucc5PMhueUqJms4T-NrDbwnccEu-SfMMg.sOo4mCXzGH3ADZAg1YRkGJFEup9DrFyfeXQHWseVwwgg.JPEG/스크린샷_2025-12-14_오후_1.39.54(2).jpg?type=w3840",
@@ -385,7 +359,7 @@ export const FILMS: Film[] = [
       "https://postfiles.pstatic.net/MjAyNTEyMTRfMjg5/MDAxNzY1Njg5ODI5MzYy.-m4eXjwqkCG4-svj88Bv5-FfKgp80djtERxn4TL4iSAg.6WaS6xIEyIoLh74hNkcgr98qHfuNOTn__G7BD8FOs6wg.JPEG/스크린샷_2025-12-14_오후_2.12.26(2).jpg?type=w3840",
       "https://postfiles.pstatic.net/MjAyNTEyMTRfMjA5/MDAxNzY1Njg5ODI5NDE4.FxZTfZ1iVL82Rao8_ZRH2w9EWn1ZElBJvpVX6xNblA0g.hLNMFc9095UUJMBN_mJXgIRMlxIM69JJ75LEyTk4rGYg.JPEG/스크린샷_2025-12-14_오후_2.13.43.jpg?type=w3840",
       "https://postfiles.pstatic.net/MjAyNTEyMTRfMjU3/MDAxNzY1Njg5ODI5NDM3.ZlkR3tCuF148nk6xDhM3vDewcP9OwbwuxgMoWqrcEKsg.NFObQJqtl6ObtPe8Ucws1EnDlsxZ_7ffyQDWlugo-oQg.JPEG/스크린샷_2025-12-14_오후_2.14.42.jpg?type=w3840",
-      "https://postfiles.pstatic.net/MjAyNTEyMTRfNDUg/MDAxNzY1Njg5ODI5NDE0.jzet428oVzh0NGDB-f1p3RBYvpI9hvf2-OfskMjxCJ0g.cPCEcsyT3SUbfE6dC53mKf1-LD73jpe1VG83TIoeQ-gg.JPEG/스크린샷_2025-12-14_오후_2.14.58.jpg?type=w3840",
+      "https://postfiles.pstatic.net/MjAyNTEyMTRfNDUg/MDAxNzY1Njg5ODI5NDE4.jzet428oVzh0NGDB-f1p3RBYvpI9hvf2-OfskMjxCJ0g.cPCEcsyT3SUbfE6dC53mKf1-LD73jpe1VG83TIoeQ-gg.JPEG/스크린샷_2025-12-14_오후_2.14.58.jpg?type=w3840",
       "https://postfiles.pstatic.net/MjAyNTEyMTRfMTY0/MDAxNzY1Njg5ODI5NDIz.-SWOvYY36tHl1wSNlQmSr7PpckAO6YNomTkxRlMt7FAg._ko-I7hihv0smhbfqTxRCZjiIDBvewvMj045AWJO0_Eg.JPEG/스크린샷_2025-12-14_오후_2.15.15.jpg?type=w3840",
       "https://postfiles.pstatic.net/MjAyNTEyMTRfMTMz/MDAxNzY1Njg5ODI5NDI5.6FBm8PdeqrlCcgwyDDbkkbCqtvtbQ9g6Z4-xH6qnWjQg.U-tJHj1-i2PeDurHhU_s1bTwB5iQz4ivGoG6kE93j7Yg.JPEG/스크린샷_2025-12-14_오후_2.15.46.jpg?type=w3840",
       "https://postfiles.pstatic.net/MjAyNTEyMTRfMTQ2/MDAxNzY1Njg5ODMwMDMz.342HIoD5GxYHRF6XiGs-p6ogNkcizCyN3GfH0CO1DOUg.DUKq6O-Ge3uMev5pbUrPoZaRVGu76zSRetZ_y73DLc0g.JPEG/스크린샷_2025-12-14_오후_2.16.35.jpg?type=w3840",
@@ -398,30 +372,6 @@ export const FILMS: Film[] = [
       "https://postfiles.pstatic.net/MjAyNTEyMTRfMTQ2/MDAxNzY1Njg5ODMwODE1.NNPXwX3jea9u0Ffnf1l_26uwzAsXhwHDSfAPFg3OSo0g.LJ5tQpGZj1lEbFUXZ_BJoIl3ohPUaW5eTUKlvbAf7WYg.JPEG/스크린샷_2025-12-14_오후_2.20.49.jpg?type=w3840"
     ],
     awards: ["2025 완주 아동권리영화제 우수상 수상"]
-  },
-
-  // Staff Works
-  {
-    id: 'st_2022_1',
-    title: "긴 길 (The Long Road)",
-    year: "2022",
-    role: "Gaffer",
-    runtime: "Feature",
-    genre: "Drama",
-    synopsis: "독립 장편 영화 조명 감독.",
-    posterUrl: "https://picsum.photos/400/600?random=501",
-    stillUrls: ["https://picsum.photos/800/450?random=601"]
-  },
-  {
-    id: 'st_2021_1',
-    title: "Night Out",
-    year: "2021",
-    role: "Assistant Director",
-    runtime: "Short",
-    genre: "Comedy",
-    synopsis: "현장 진행 및 스케줄 관리.",
-    posterUrl: "https://picsum.photos/400/600?random=502",
-    stillUrls: ["https://picsum.photos/800/450?random=602"]
   }
 ];
 

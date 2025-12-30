@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { STILLS } from '../constants';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -38,25 +39,27 @@ const Stills: React.FC = () => {
   return (
     <div className="min-h-screen bg-cinematic-black pt-24 pb-20">
       <div className="container mx-auto px-6">
-        <h2 className="text-4xl md:text-6xl font-serif text-white mb-12 tracking-tighter">
-          ARCHIVE
+        <h2 className="text-4xl md:text-6xl font-serif text-white mb-12 tracking-tighter uppercase">
+          STILLS ARCHIVE
         </h2>
         
-        {/* Masonry-like Layout using columns */}
-        <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
+        <div className="columns-1 md:columns-2 lg:columns-3 gap-8 space-y-8">
           {STILLS.map((still, index) => (
             <div 
               key={still.id} 
-              className="break-inside-avoid relative group cursor-zoom-in"
+              className="break-inside-avoid relative group cursor-zoom-in overflow-hidden shadow-xl bg-neutral-900 border border-white/5"
               onClick={() => setLightboxIndex(index)}
             >
               <img 
                 src={still.url} 
                 alt="Archive Still" 
-                className="w-full h-auto grayscale group-hover:grayscale-0 transition-all duration-700"
+                className="w-full h-auto opacity-100 transition-all duration-1000 group-hover:scale-105"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end p-4">
-                <span className="text-white text-xs tracking-widest uppercase">{still.type} - {still.caption}</span>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end p-6">
+                <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                    <span className="text-cinematic-accent text-[10px] tracking-[0.3em] uppercase block mb-1">{still.type}</span>
+                    <span className="text-white text-sm font-serif tracking-wider">{still.caption}</span>
+                </div>
               </div>
             </div>
           ))}
@@ -66,47 +69,45 @@ const Stills: React.FC = () => {
       {/* Lightbox */}
       {lightboxIndex !== null && (
         <div 
-          className="fixed inset-0 z-[60] bg-black/95 flex items-center justify-center p-4 cursor-zoom-out select-none"
+          className="fixed inset-0 z-[100] bg-black/98 flex items-center justify-center p-4 cursor-zoom-out select-none animate-fade-in"
           onClick={() => setLightboxIndex(null)}
         >
-          {/* Close Button */}
           <button 
-            className="absolute top-6 right-6 text-white/70 hover:text-white transition-colors p-2 z-[70]"
+            className="absolute top-10 right-10 text-white/50 hover:text-white transition-all p-3 z-[110] hover:scale-110"
             onClick={() => setLightboxIndex(null)}
           >
-            <X size={40} />
+            <X size={48} />
           </button>
 
-           {/* Previous Button */}
            {lightboxIndex > 0 && (
              <button
-                className="absolute left-2 md:left-8 text-white/50 hover:text-white transition-colors p-2 z-[70] cursor-pointer"
+                className="absolute left-4 md:left-12 text-white/30 hover:text-white transition-all p-4 z-[110] cursor-pointer hover:scale-110"
                 onClick={(e) => { e.stopPropagation(); navigateLightbox(-1); }}
              >
-                <ChevronLeft size={48} />
+                <ChevronLeft size={64} />
              </button>
           )}
 
-          <img 
-            src={STILLS[lightboxIndex].url} 
-            alt="Fullsize" 
-            className="max-h-[90vh] max-w-[90vw] object-contain shadow-2xl cursor-pointer" 
-            onClick={(e) => { e.stopPropagation(); navigateLightbox(1); }}
-          />
-          
-          {/* Caption */}
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-center pointer-events-none">
-             <p className="text-white text-sm tracking-widest uppercase mb-1">{STILLS[lightboxIndex].caption}</p>
-             <p className="text-white/50 text-xs font-mono">{lightboxIndex + 1} / {STILLS.length}</p>
+          <div className="relative group max-h-[90vh] max-w-[90vw] flex flex-col items-center">
+              <img 
+                src={STILLS[lightboxIndex].url} 
+                alt="Fullsize Still" 
+                className="max-h-[85vh] max-w-[90vw] object-contain shadow-[0_0_100px_rgba(255,255,255,0.05)] cursor-pointer" 
+                onClick={(e) => { e.stopPropagation(); navigateLightbox(1); }}
+              />
+              
+              <div className="mt-8 text-center pointer-events-none">
+                 <p className="text-white text-lg font-serif tracking-widest uppercase mb-2">{STILLS[lightboxIndex].caption}</p>
+                 <p className="text-cinematic-accent/50 text-xs tracking-[0.5em] font-mono">{lightboxIndex + 1} / {STILLS.length}</p>
+              </div>
           </div>
 
-           {/* Next Button */}
            {lightboxIndex < STILLS.length - 1 && (
              <button
-                className="absolute right-2 md:right-8 text-white/50 hover:text-white transition-colors p-2 z-[70] cursor-pointer"
+                className="absolute right-4 md:right-12 text-white/30 hover:text-white transition-all p-4 z-[110] cursor-pointer hover:scale-110"
                 onClick={(e) => { e.stopPropagation(); navigateLightbox(1); }}
              >
-                <ChevronRight size={48} />
+                <ChevronRight size={64} />
              </button>
           )}
         </div>
