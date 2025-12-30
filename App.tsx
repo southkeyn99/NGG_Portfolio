@@ -107,31 +107,39 @@ const Home: React.FC<{ films: Film[], directorInfo: any }> = ({ films, directorI
                </Link>
                <div className="w-full lg:w-2/5 text-left">
                   <span className="text-cinematic-accent font-bold text-lg mb-2 block tracking-tighter">{recentFilm.year}</span>
-                  <h3 className="font-serif text-white mb-6 tracking-tight leading-tight">
+                  <h3 className="font-serif text-white mb-2 tracking-tight leading-tight">
                     {renderTitle(recentFilm.title, "text-4xl md:text-6xl", "text-xl md:text-3xl")}
                   </h3>
-                  
-                  {/* Awards Preview on Home */}
+
+                  {/* High Visibility Awards Row - Moved Up */}
                   {recentFilm.awards && recentFilm.awards.length > 0 && (
-                    <div className="flex items-center gap-2 mb-6 text-cinematic-accent animate-pulse">
-                      <Award size={16} />
-                      <span className="text-[10px] uppercase font-bold tracking-widest truncate max-w-xs">{recentFilm.awards[0]} {recentFilm.awards.length > 1 && `외 ${recentFilm.awards.length - 1}개 수상`}</span>
+                    <div className="flex flex-wrap gap-x-4 gap-y-2 mb-6">
+                      {recentFilm.awards.map((award, i) => (
+                        <div key={i} className="flex items-center gap-1.5 text-cinematic-accent">
+                          <Award size={13} strokeWidth={2.5} className="shrink-0" />
+                          <span className="text-[10px] font-bold uppercase tracking-widest leading-none">{award}</span>
+                        </div>
+                      ))}
                     </div>
                   )}
-
-                  <p className="text-neutral-500 text-base md:text-lg mb-10 max-w-lg leading-relaxed whitespace-pre-line font-light">{recentFilm.synopsis}</p>
                   
-                  <div className="text-cinematic-accent text-[11px] md:text-xs font-bold tracking-[0.2em] mb-12 flex flex-wrap gap-4 items-center uppercase">
-                    <span>{recentFilm.genre}</span>
+                  {/* Detailed Info in Lowercase */}
+                  <div className="text-cinematic-accent text-[11px] md:text-xs font-bold tracking-[0.1em] mb-6 flex flex-wrap gap-3 items-center lowercase">
+                    <span className="lowercase">{recentFilm.genre}</span>
                     <span className="opacity-30 font-light">|</span>
-                    <span>{recentFilm.runtime}</span>
+                    <span className="lowercase">{recentFilm.runtime}</span>
                     {recentFilm.aspectRatio && (
                       <>
                         <span className="opacity-30 font-light">|</span>
-                        <span>{recentFilm.aspectRatio}</span>
+                        <span className="lowercase">{recentFilm.aspectRatio}</span>
                       </>
                     )}
                   </div>
+
+                  <p className="text-neutral-400 text-base md:text-lg mb-10 max-w-lg leading-relaxed whitespace-pre-line font-light">
+                    {recentFilm.synopsis}
+                  </p>
+                  
                   <Link to="/film" className="inline-flex items-center gap-3 text-white border-b border-cinematic-accent/50 pb-2 hover:border-cinematic-accent hover:text-cinematic-accent transition-all duration-300 tracking-[0.2em] text-xs font-bold uppercase">
                     View Project <ArrowRight size={16} />
                   </Link>
