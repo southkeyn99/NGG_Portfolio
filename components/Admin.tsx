@@ -5,12 +5,10 @@ import { Save, Upload, Plus, Trash2, Lock, Unlock, X, Edit3, Image as ImageIcon,
 
 interface AdminProps {
   films: Film[];
-  setFilms: React.Dispatch<SetStateAction<Film[]>>;
+  setFilms: React.Dispatch<React.SetStateAction<Film[]>>;
   directorInfo: any;
-  setDirectorInfo: React.Dispatch<SetStateAction<any>>;
+  setDirectorInfo: React.Dispatch<React.SetStateAction<any>>;
 }
-
-type SetStateAction<T> = T | ((prevState: T) => T);
 
 const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirectorInfo }) => {
   const [password, setPassword] = useState('');
@@ -42,10 +40,40 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
     });
   }, [films, activeCategory]);
 
-  const processFile = (file: File, callback: (base64: string) => void) => {
+  // Comprehensive image processing: resizing and compressing to stay within LocalStorage limits
+  const processImage = (file: File, callback: (base64: string) => void) => {
     const reader = new FileReader();
-    reader.onloadend = () => {
-      callback(reader.result as string);
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        const MAX_DIM = 1200; // Limit resolution for local storage
+
+        if (width > height) {
+          if (width > MAX_DIM) {
+            height *= MAX_DIM / width;
+            width = MAX_DIM;
+          }
+        } else {
+          if (height > MAX_DIM) {
+            width *= MAX_DIM / height;
+            height = MAX_DIM;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Export as JPEG with 0.7 quality to save space
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+        callback(compressedBase64);
+      };
+      img.src = e.target?.result as string;
     };
     reader.readAsDataURL(file);
   };
@@ -53,10 +81,7 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, filmId: string, type: 'poster' | 'still', index?: number) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
-    processFile(file, (base64String) => {
-      updateFilmImage(filmId, type, base64String, index);
-    });
+    processImage(file, (base64) => updateFilmImage(filmId, type, base64, index));
   };
 
   const handleDrop = (e: React.DragEvent, filmId: string, type: 'poster' | 'still', index?: number) => {
@@ -64,14 +89,11 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
     setDragActiveId(null);
     const file = e.dataTransfer.files?.[0];
     if (!file) return;
-
-    processFile(file, (base64String) => {
-      updateFilmImage(filmId, type, base64String, index);
-    });
+    processImage(file, (base64) => updateFilmImage(filmId, type, base64, index));
   };
 
   const updateFilmImage = (filmId: string, type: 'poster' | 'still', base64: string, index?: number) => {
-    const updatedFilms = films.map(f => {
+    setFilms(prev => prev.map(f => {
       if (f.id === filmId) {
         if (type === 'poster') {
           return { ...f, posterUrl: base64 };
@@ -82,9 +104,7 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
         }
       }
       return f;
-    });
-    setFilms(updatedFilms);
-    localStorage.setItem('director_films', JSON.stringify(updatedFilms));
+    }));
   };
 
   const handleDrag = (e: React.DragEvent, id: string) => {
@@ -101,16 +121,11 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
     setDragActiveId(null);
     const file = e.dataTransfer.files?.[0];
     if (!file) return;
-
-    processFile(file, (base64String) => {
-      updateDirectorInfo('heroImageUrl', base64String);
-    });
+    processImage(file, (base64) => setDirectorInfo(prev => ({ ...prev, heroImageUrl: base64 })));
   };
 
   const updateFilmText = (filmId: string, field: keyof Film, value: any) => {
-    const updatedFilms = films.map(f => f.id === filmId ? { ...f, [field]: value } : f);
-    setFilms(updatedFilms);
-    localStorage.setItem('director_films', JSON.stringify(updatedFilms));
+    setFilms(prev => prev.map(f => f.id === filmId ? { ...f, [field]: value } : f));
   };
 
   const addNewFilm = () => {
@@ -126,71 +141,34 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
       stillUrls: [],
       awards: []
     };
-    
-    const updatedFilms = [newFilm, ...films];
-    setFilms(updatedFilms);
-    localStorage.setItem('director_films', JSON.stringify(updatedFilms));
+    setFilms(prev => [newFilm, ...prev]);
     setEditingFilmId(newFilm.id);
   };
 
   const deleteFilm = (filmId: string, title: string) => {
     if (window.confirm(`'${title}' 작품을 정말로 삭제하시겠습니까?`)) {
-      const updatedFilms = films.filter(f => f.id !== filmId);
-      setFilms(updatedFilms);
-      localStorage.setItem('director_films', JSON.stringify(updatedFilms));
+      setFilms(prev => prev.filter(f => f.id !== filmId));
       setEditingFilmId(null);
     }
   };
 
-  const addAward = (filmId: string) => {
-    const film = films.find(f => f.id === filmId);
-    if (!film) return;
-    const newAwards = [...(film.awards || []), ""];
-    updateFilmText(filmId, 'awards', newAwards);
-  };
-
-  const updateAward = (filmId: string, index: number, value: string) => {
-    const film = films.find(f => f.id === filmId);
-    if (!film) return;
-    const newAwards = [...(film.awards || [])];
-    newAwards[index] = value;
-    updateFilmText(filmId, 'awards', newAwards);
-  };
-
-  const removeAward = (filmId: string, index: number) => {
-    const film = films.find(f => f.id === filmId);
-    if (!film) return;
-    const newAwards = (film.awards || []).filter((_, i) => i !== index);
-    updateFilmText(filmId, 'awards', newAwards);
-  };
-
   const addStill = (filmId: string) => {
-    const updatedFilms = films.map(f => {
+    setFilms(prev => prev.map(f => {
       if (f.id === filmId) {
         return { ...f, stillUrls: [...f.stillUrls, 'https://placehold.co/800x450/111/444/png?text=New+Still'] };
       }
       return f;
-    });
-    setFilms(updatedFilms);
-    localStorage.setItem('director_films', JSON.stringify(updatedFilms));
+    }));
   };
 
   const removeStill = (filmId: string, index: number) => {
-    const updatedFilms = films.map(f => {
+    setFilms(prev => prev.map(f => {
       if (f.id === filmId) {
         const newStills = f.stillUrls.filter((_, i) => i !== index);
         return { ...f, stillUrls: newStills };
       }
       return f;
-    });
-    setFilms(updatedFilms);
-    localStorage.setItem('director_films', JSON.stringify(updatedFilms));
-  };
-
-  const updateDirectorInfo = (field: string, value: string) => {
-    const updatedInfo = { ...directorInfo, [field]: value };
-    setDirectorInfo(updatedInfo);
-    localStorage.setItem('director_info', JSON.stringify(updatedInfo));
+    }));
   };
 
   if (!isAuthenticated) {
@@ -237,19 +215,19 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-xs uppercase text-neutral-500 mb-2">Name</label>
-                <input value={directorInfo.name} onChange={(e) => updateDirectorInfo('name', e.target.value)} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" />
+                <input value={directorInfo.name} onChange={(e) => setDirectorInfo(prev => ({...prev, name: e.target.value}))} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" />
               </div>
               <div>
                 <label className="block text-xs uppercase text-neutral-500 mb-2">Korean Name</label>
-                <input value={directorInfo.koreanName} onChange={(e) => updateDirectorInfo('koreanName', e.target.value)} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" />
+                <input value={directorInfo.koreanName} onChange={(e) => setDirectorInfo(prev => ({...prev, koreanName: e.target.value}))} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" />
               </div>
               <div className="md:col-span-2">
                 <label className="block text-xs uppercase text-neutral-500 mb-2">Tagline</label>
-                <input value={directorInfo.tagline} onChange={(e) => updateDirectorInfo('tagline', e.target.value)} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" />
+                <input value={directorInfo.tagline} onChange={(e) => setDirectorInfo(prev => ({...prev, tagline: e.target.value}))} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" />
               </div>
               <div className="md:col-span-2">
                 <label className="block text-xs uppercase text-neutral-500 mb-2">Bio</label>
-                <textarea value={directorInfo.bio} onChange={(e) => updateDirectorInfo('bio', e.target.value)} rows={4} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" />
+                <textarea value={directorInfo.bio} onChange={(e) => setDirectorInfo(prev => ({...prev, bio: e.target.value}))} rows={4} className="w-full bg-neutral-900 border border-neutral-800 p-3 text-white focus:border-cinematic-accent outline-none" />
               </div>
             </div>
           </section>
@@ -273,7 +251,7 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
                   <span className="text-xs text-white uppercase font-bold px-4 text-center">드래그하거나 클릭하여 업로드</span>
                   <input type="file" className="hidden" accept="image/*" onChange={(e) => {
                     const file = e.target.files?.[0];
-                    if (file) processFile(file, (base64) => updateDirectorInfo('heroImageUrl', base64));
+                    if (file) processImage(file, (base64) => setDirectorInfo(prev => ({ ...prev, heroImageUrl: base64 })));
                   }} />
                 </label>
                 {dragActiveId === 'hero' && (
@@ -431,7 +409,7 @@ const Admin: React.FC<AdminProps> = ({ films, setFilms, directorInfo, setDirecto
                     </div>
 
                     <div className="flex justify-end pt-4 border-t border-neutral-800">
-                       <p className="text-[10px] text-neutral-500 italic font-light tracking-wide uppercase">Changes are saved automatically to local storage.</p>
+                       <p className="text-[10px] text-neutral-500 italic font-light tracking-wide uppercase">All changes are now automatically persisted to your browser storage.</p>
                     </div>
                   </div>
                 )}

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { HashRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -25,7 +25,7 @@ const ScrollToTop = () => {
 // Home Page Composite Component
 const Home: React.FC<{ films: Film[], directorInfo: any }> = ({ films, directorInfo }) => {
   const recentFilm = films[0]; 
-  const recentFilmImage = recentFilm.stillUrls[0] || recentFilm.posterUrl;
+  const recentFilmImage = recentFilm?.stillUrls?.[0] || recentFilm?.posterUrl;
 
   // Helper to split title into main and sub (English)
   const renderTitle = (title: string, mainClass: string, subClass: string) => {
@@ -118,6 +118,30 @@ function App() {
     const saved = localStorage.getItem('director_info');
     return saved ? JSON.parse(saved) : INITIAL_INFO;
   });
+
+  // Automatically persist changes to localStorage whenever state updates
+  const isFirstRender = useRef(true);
+  
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    
+    try {
+      localStorage.setItem('director_films', JSON.stringify(films));
+    } catch (e) {
+      console.error("Failed to save films to localStorage. Possible quota exceeded.", e);
+    }
+  }, [films]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('director_info', JSON.stringify(directorInfo));
+    } catch (e) {
+      console.error("Failed to save info to localStorage. Possible quota exceeded.", e);
+    }
+  }, [directorInfo]);
 
   return (
     <Router>
